@@ -6,8 +6,8 @@ info = ""
 def calc(evt): #For calculation button
     global info
     lb1.insert(END,e.get())
-    timeEntries.append(e.get())
-    info = e.get()
+    timeEntries.append(int(e.get()))
+    info = "Total: " + str(sum(timeEntries))
     stat.set(info)
     e.delete(0,END)
 
