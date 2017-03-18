@@ -1,4 +1,5 @@
 # Panie wężu proszę o program do tacho
+# -*- encoding: utf8 -*-
 from tkinter import *
 timeEntries = []
 info = ""
@@ -9,7 +10,8 @@ def calc(evt): #For calculation button
 
     try:
         int(entry)
-        list_one.insert(0,entry)
+        #list_one.insert(0,entry)
+        timeEntries_update()
         timeEntries.append(int(entry))
         info = "Total: " + str(sum(timeEntries))
         stat.set(info)
@@ -27,6 +29,20 @@ def clearone(evt):
     entry = entry_field.get()[:-1]
     entry_field.delete(0, END)
     entry_field.insert(0,entry)
+
+def num_press(num):
+        if num == "C":
+            clearbox("C")
+        elif num == ",": # yeah, I found it quite usefull for my keyboard
+            entry_field.insert(END, ".")
+        else:
+
+            entry_field.insert(END, num)
+            entry_field.focus()
+
+def timeEntries_update():
+    for i in timeEntries:
+        list_one.insert(0,i)
 
 #=======tkinter window===========
 win = Tk()
@@ -57,7 +73,7 @@ entry_field.focus()
 #-------set what happens if you press Enter-----
 win.bind("<Return>", calc)
 win.bind("<KP_Enter>", calc)
-win.bind("<KP_Add>", calc) #have to be fixed adding "+" to the list
+win.bind("<KP_Add>", calc)
 
 #=========================================
 
@@ -77,15 +93,6 @@ status = Label(downFrame, textvariable=stat, bd=1, relief=SUNKEN, font = "Helvet
 stat.set(info)
 status.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
-def num_press(num):
-        if num == "C":
-            clearbox("C")
-        elif num == ",": # yeah, I found it quite usefull for my keyboard
-            entry_field.insert(END, ".")
-        else:
-
-            entry_field.insert(END, num)
-            entry_field.focus()
 #=======Numpad==========
 bttn = []
 numbers="HMS789456123C0:"
