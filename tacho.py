@@ -9,11 +9,12 @@ def calc(evt): #For calculation button
 
     try:
         int(entry)
-        list_one.insert(END, entry)
+        list_one.insert(0,entry)
         timeEntries.append(int(entry))
         info = "Total: " + str(sum(timeEntries))
         stat.set(info)
         entry_field.delete(0, END)
+
     except:
         #entry_field.delete(0, END)
         entry_field.focus()
