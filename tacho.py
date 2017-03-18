@@ -15,12 +15,17 @@ def calc(evt): #For calculation button
         stat.set(info)
         entry_field.delete(0, END)
     except:
-        entry_field.delete(0, END)
+        #entry_field.delete(0, END)
         entry_field.focus()
 
 def clearbox(evt): # clear entry box
     entry_field.delete(0, END)
     entry_field.focus()
+
+def clearone(evt):
+    entry = entry_field.get()[:-1]
+    entry_field.delete(0, END)
+    entry_field.insert(0,entry)
 
 #=======tkinter window===========
 win = Tk()
@@ -42,8 +47,7 @@ leftFrame.grid(row=1, column=0)
 downFrame = Frame(win)
 downFrame.grid(row=2, columnspan=2)
 
-v = StringVar()
-entry_field = Entry(topFrame, textvariable=v, font ="Helvetica 20 bold", width=18, justify=RIGHT)
+entry_field = Entry(topFrame, textvariable=StringVar(), font ="Helvetica 20 bold", width=18, justify=RIGHT)
 #entry_field.grid(sticky=E)
 entry_field.pack(fill=X, expand=True, side=RIGHT, ipady=10)
 entry_field.bind('<Button-1>', clearbox)
@@ -100,7 +104,7 @@ cbutton.bind('<Button-1>', calc)
 
 otherbutton = Button(rightFrame, text ="←", font ="Helvetica 15 bold", height = 1, width = 2)
 otherbutton.grid(row = 5, column = 4, pady = 2, padx=2)
-otherbutton.bind('<Button-1>', clearbox)
+otherbutton.bind('<Button-1>', clearone)
 
 modulobutton = Button(rightFrame, text ="M24", font ="Helvetica 15 bold", height = 1, width = 2)
 modulobutton.grid(row = 5, column = 5, pady = 2, padx=2)
