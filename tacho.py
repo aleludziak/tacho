@@ -3,29 +3,29 @@
 
 from tkinter import *
 
-timeEntries = []
+entries = []
 total_info = ""
 
 
 def add_entry(evt):  # For calculation button
-    global total_info, timeEntries
+    global total_info, entries
     entry = top_frame_input.get()
     entry = entry.replace("+", "")
 
     try:
         int(entry)
         # entries_list.insert(0,entry)
-        timeEntries.append(int(entry))
-        total_info = "Total: " + str(sum(timeEntries))
-        stat.set(total_info)
+        entries.append(int(entry))
+        total_info = "Total: " + str(sum(entries))
+        status.set(total_info)
+        entries_update()
         top_frame_input.delete(0, END)
-        time_entries_update()
 
     except:
         top_frame_input.focus()
 
 
-def clear_box(evt):  # clear top_frame_input
+def clear_all(evt):  # clear top_frame_input
     top_frame_input.delete(0, END)
     top_frame_input.focus()
 
@@ -36,9 +36,9 @@ def clear_one(evt):  # clear last digit from top_frame_input
     top_frame_input.insert(0, entry)
 
 
-def num_press(num):
+def num_press(num):  # num pad button action
     if num == "C":
-        clear_box("C")
+        clear_all("C")
     elif num == ",":  # yeah, I found it quite useful for my keyboard
         top_frame_input.insert(END, ".")
     else:
@@ -47,9 +47,9 @@ def num_press(num):
         top_frame_input.focus()
 
 
-def time_entries_update():
+def entries_update():
     entries_list.delete(0, END)
-    for ti in timeEntries:
+    for ti in entries:
         entries_list.insert(0, ti)
 
 
@@ -73,11 +73,17 @@ leftFrame.grid(row=1, column=0)
 bottomFrame = Frame(win)
 bottomFrame.grid(row=2, columnspan=2)
 
+# -------keys actions-----
+win.bind("<Return>", add_entry)
+win.bind("<KP_Enter>", add_entry)
+win.bind("<KP_Add>", add_entry)
+
+# ==========input entry===========
 top_frame_input = Entry(topFrame, textvariable=StringVar(),
                         font="Helvetica 20 bold", width=18, justify=RIGHT)
 top_frame_input.grid(column=8)
 # top_frame_input.pack(fill=X, expand=True, side=RIGHT, ipady=10)
-top_frame_input.bind('<Button-1>', clear_box)
+top_frame_input.bind('<Button-1>', clear_all)
 top_frame_input.focus()
 
 # ======top icons==========
@@ -87,7 +93,7 @@ for i in range(0, 7):
 
     top_frame_icons.append(
 
-        Button(topFrame, text='X'.format(i),
+        Button(topFrame, text='X',
 
                font="Helvetica 15 bold", height=1, width=2)
 
@@ -95,13 +101,7 @@ for i in range(0, 7):
 
     top_frame_icons[i].grid(row=0, column=i)
 
-# -------keys actions-----
-win.bind("<Return>", add_entry)
-win.bind("<KP_Enter>", add_entry)
-win.bind("<KP_Add>", add_entry)
-
 # ===========Listbox with scrollbar=================
-
 entries_list = Listbox(leftFrame, exportselection=0, height=15, width=40)
 entries_list.pack(side=LEFT, fill=BOTH, expand=True)
 
@@ -113,25 +113,18 @@ entries_list.configure(yscrollcommand=entries_list_scrollbar.set)
 
 # entries_list.bind('<<ListboxSelect>>', select) #action for selected line
 
-# =====
-stat = StringVar()
-bottom_status_total = Label(bottomFrame, textvariable=stat, bd=1, relief=SUNKEN, font="Helvetica 15 bold", width=54)
-stat.set(total_info)
-bottom_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
-
-# =======Numpad==========
-bttn = []
-numbers = "HMS789456123C0:"
+# =======num pad==========
+keyboard = []
+keys = "HMS789456123C0:"
 i = 0
 for j in range(1, 6):
     for k in range(3):
-        bttn.append(Button(rightFrame, text=numbers[i], font="Helvetica 15 bold", height=1, width=2))
-        bttn[i].grid(row=j, column=k, pady=2, padx=2)
-        bttn[i]["command"] = lambda x=numbers[i]: num_press(x)
+        keyboard.append(Button(rightFrame, text=keys[i], font="Helvetica 15 bold", height=1, width=2))
+        keyboard[i].grid(row=j, column=k, pady=2, padx=2)
+        keyboard[i]["command"] = lambda x=keys[i]: num_press(x)
         i += 1
 
-# other buttons
-
+# --------other buttons---------
 add_entry_button = Button(rightFrame, text="+", font="Helvetica 15 bold", height=6, width=7)
 add_entry_button.grid(row=1, column=4, rowspan=4, columnspan=2, pady=2, padx=2)
 add_entry_button.bind('<Button-1>', add_entry)
@@ -143,6 +136,13 @@ clear_one_button.bind('<Button-1>', clear_one)
 modulo_button = Button(rightFrame, text="M24", font="Helvetica 15 bold", height=1, width=2)
 modulo_button.grid(row=5, column=5, pady=2, padx=2)
 modulo_button.bind('<Button-1>', add_entry)
+
+# =====bottom status=============
+status = StringVar()
+bottom_status_total = Label(bottomFrame, textvariable=status, bd=1, relief=SUNKEN,
+                            font="Helvetica 15 bold", width=54)
+status.set(total_info)
+bottom_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
 # ============================================
 
