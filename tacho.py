@@ -4,17 +4,23 @@ timeEntries = []
 info = ""
 def calc(evt): #For calculation button
     global info, timeEntries
-    entry = e.get()
+    entry = entry_field.get()
     entry = entry.replace("+","")
-    lb1.insert(END,entry)
-    timeEntries.append(int(entry))
-    info = "Total: " + str(sum(timeEntries))
-    stat.set(info)
-    e.delete(0,END)
+
+    try:
+        int(entry)
+        list_one.insert(END, entry)
+        timeEntries.append(int(entry))
+        info = "Total: " + str(sum(timeEntries))
+        stat.set(info)
+        entry_field.delete(0, END)
+    except:
+        entry_field.delete(0, END)
+        entry_field.focus()
 
 def clearbox(evt): # clear entry box
-    e.delete(0,END)
-    e.focus()
+    entry_field.delete(0, END)
+    entry_field.focus()
 
 #=======tkinter window===========
 win = Tk()
@@ -37,11 +43,11 @@ downFrame = Frame(win)
 downFrame.grid(row=2, columnspan=2)
 
 v = StringVar()
-e = Entry(topFrame, textvariable=v, font ="Helvetica 20 bold", width=18, justify=RIGHT)
-#e.grid(sticky=E)
-e.pack(fill=X, expand=True, side=RIGHT, ipady=10)
-e.bind('<Button-1>', clearbox)
-e.focus()
+entry_field = Entry(topFrame, textvariable=v, font ="Helvetica 20 bold", width=18, justify=RIGHT)
+#entry_field.grid(sticky=E)
+entry_field.pack(fill=X, expand=True, side=RIGHT, ipady=10)
+entry_field.bind('<Button-1>', clearbox)
+entry_field.focus()
 
 #-------set what happens if you press Enter-----
 win.bind("<Return>", calc)
@@ -50,14 +56,14 @@ win.bind("<KP_Add>", calc) #have to be fixed adding "+" to the list
 
 #=========================================
 
-lb1 = Listbox(leftFrame, exportselection=0, height=15, width=40)
-lb1.pack(side=LEFT, fill=BOTH, expand=True)
+list_one = Listbox(leftFrame, exportselection=0, height=15, width=40)
+list_one.pack(side=LEFT, fill=BOTH, expand=True)
 
 sb1 = Scrollbar(leftFrame, orient=VERTICAL) #scrollbar
 sb1.pack(side=LEFT,fill=BOTH)
 
-sb1.configure(command=lb1.yview)
-lb1.configure(yscrollcommand=sb1.set)
+sb1.configure(command=list_one.yview)
+list_one.configure(yscrollcommand=sb1.set)
 
 # lb1.bind('<<ListboxSelect>>', firstselect) #action for selected line
 
@@ -70,11 +76,11 @@ def num_press(num):
         if num == "C":
             clearbox("C")
         elif num == ",": # yeah, I found it quite usefull for my keyboard
-            e.insert(END,".")
+            entry_field.insert(END, ".")
         else:
 
-            e.insert(END, num)
-            e.focus()
+            entry_field.insert(END, num)
+            entry_field.focus()
 #=======Numpad==========
 bttn = []
 numbers="HMS789456123C0:"
@@ -94,7 +100,7 @@ cbutton.bind('<Button-1>', calc)
 
 otherbutton = Button(rightFrame, text ="←", font ="Helvetica 15 bold", height = 1, width = 2)
 otherbutton.grid(row = 5, column = 4, pady = 2, padx=2)
-otherbutton.bind('<Button-1>', calc)
+otherbutton.bind('<Button-1>', clearbox)
 
 modulobutton = Button(rightFrame, text ="M24", font ="Helvetica 15 bold", height = 1, width = 2)
 modulobutton.grid(row = 5, column = 5, pady = 2, padx=2)
