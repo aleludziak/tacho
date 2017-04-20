@@ -49,9 +49,13 @@ def num_press(num):  # num pad button action
 
 def entries_update():
     entries_list.delete(0, END)
-    for ti in entries:
-        entries_list.insert(0, ti)
-
+    for sec in entries:
+        converted_seconds = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60) # convert to HH:MM:SS
+        entries_list.insert(0, converted_seconds)
+        if sec == 1:
+            entries_list.itemconfig(0, {'bg': 'green'})  # it is going to be useful later,
+            # for marking different types of entries
+    # print(entries_list.get(0, END))
 
 # =======tkinter window===========
 win = Tk()
