@@ -2,12 +2,15 @@
 # Panie wężu proszę o program do tacho
 
 from tkinter import *
+import re, datetime
 
 entries = []
 total_info = ""
 
 
 def add_entry(evt):  # For calculation button
+    Entry()
+'''
     global total_info, entries
     entry = top_frame_input.get()
     entry = entry.replace("+", "")
@@ -24,7 +27,7 @@ def add_entry(evt):  # For calculation button
     except:
         top_frame_input.focus()
 
-
+'''
 def clear_all(evt):  # clear top_frame_input
     top_frame_input.delete(0, END)
     top_frame_input.focus()
@@ -46,16 +49,17 @@ def num_press(num):  # num pad button action
         top_frame_input.insert(END, num)
         top_frame_input.focus()
 
-
+'''
 def entries_update():
     entries_list.delete(0, END)
     for sec in entries:
-        converted_seconds = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60) # convert to HH:MM:SS
+        converted_seconds = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         entries_list.insert(0, converted_seconds)
         if sec == 1:
             entries_list.itemconfig(0, {'bg': 'green'})  # it is going to be useful later,
             # for marking different types of entries
-    # print(entries_list.get(0, END))
+            # print(entries_list.get(0, END))
+'''
 
 # =======tkinter window===========
 win = Tk()
@@ -94,7 +98,6 @@ top_frame_input.focus()
 top_frame_icons = []
 
 for i in range(0, 7):
-
     top_frame_icons.append(
 
         Button(topFrame, text='X',
@@ -149,5 +152,49 @@ status.set(total_info)
 bottom_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
 # ============================================
+
+class Entry:
+
+    def __init__(self):
+        self.input = top_frame_input.get()
+        self.cleaner()
+        self.seconds = int(self.input)
+        self.add()
+        self.update()
+        status.set(self.sum())
+        print(self.seconds)
+        print(self.converter(self.seconds))
+
+    def cleaner(self):
+        self.input = re.sub("[^0-9:]", "", self.input) # leaves only digits and ":" into input
+        try:
+            h,m,s = re.split(':',self.input)
+            self.input = int(datetime.timedelta(hours=int(h),minutes=int(m),seconds=int(s)).total_seconds())
+        except:
+            self.input = re.sub("\D", "", self.input) # clean input from non-digit characters
+
+        # self.input = self.input.replace("+", "") # simplest method (replace just one character)
+            # in case this one above will make a troubles
+
+    def converter(self, sec):
+        convertion = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
+        return convertion
+
+    def add(self):
+        global entries
+        entries.append(self.seconds)
+        print("Entries: "+str(entries))
+
+    def sum(self):
+        global total_info
+        total = sum(entries)
+        return total
+
+
+    def update(self):
+        entries_list.delete(0, END)
+        for e in entries:
+            converted_entry = self.converter(e)
+            entries_list.insert(0, converted_entry)
 
 win.mainloop()
