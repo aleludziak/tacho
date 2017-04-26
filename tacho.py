@@ -2,11 +2,10 @@
 # Panie wężu proszę o program do tacho
 
 from tkinter import *
-import re, datetime
+import re, datetime, Pmw, time
 
 entries = []
 total_info = ""
-
 
 def add_entry(evt):  # For calculation button
     Entry()
@@ -40,6 +39,8 @@ def clear_one(evt):  # clear last digit from top_frame_input
 
 
 def num_press(num):  # num pad button action
+    if top_frame_input.get() == '00:00:00':
+        clear_all("C")
     if num == "C":
         clear_all("C")
     elif num == ",":  # yeah, I found it quite useful for my keyboard
@@ -64,12 +65,22 @@ def entries_update():
 # =======tkinter window===========
 win = Tk()
 # win.geometry("775x325") # Force window size
-win.wm_title("Tacho 0.0.2")
+win.wm_title("Tacho 0.0.3")
 win.resizable(width=FALSE, height=FALSE)
 
+Pmw.initialise(win)
+
+
+'''
 topFrame = Frame(win)
 # topFrame.pack(fill=BOTH)
 topFrame.grid(row=0, column=0, columnspan=2)
+'''
+topLeftFrame = Frame(win)
+topLeftFrame.grid(row=0, column=0)
+
+topRightFrame = Frame(win)
+topRightFrame.grid(row=0, column=1)
 
 rightFrame = Frame(win)
 rightFrame.grid(row=1, column=1)
@@ -87,28 +98,44 @@ win.bind("<KP_Enter>", add_entry)
 win.bind("<KP_Add>", add_entry)
 
 # ==========input entry===========
+'''
 top_frame_input = Entry(topFrame, textvariable=StringVar(),
                         font="Helvetica 20 bold", width=18, justify=RIGHT)
 top_frame_input.grid(column=8)
 # top_frame_input.pack(fill=X, expand=True, side=RIGHT, ipady=10)
 top_frame_input.bind('<Button-1>', clear_all)
 top_frame_input.focus()
+'''
+top_frame_input = Pmw.Counter(topRightFrame,
+                              #labelpos = 'w',
+                              # label_text = 'Time:',
+                              entry_font="Helvetica 20 bold",
+                              entry_width = 12,
+                              autorepeat = True, datatype = 'time',
+                              entryfield_validate = {'validator' : 'time'},
+                              entryfield_value = '00:00:00',
+                              increment = 60)
+top_frame_input.grid(column = 0)
+
 
 # ======top icons==========
+
 top_frame_icons = []
 
-for i in range(0, 7):
+for i in range(0, 5):
     top_frame_icons.append(
 
-        Button(topFrame, text='X',
+        Button(topLeftFrame, text='X',
 
                font="Helvetica 15 bold", height=1, width=2)
 
     )
 
-    top_frame_icons[i].grid(row=0, column=i)
+    top_frame_icons[i].grid(row=0, column=i, sticky = W,ipadx = 10, ipady=1)
+
 
 # ===========Listbox with scrollbar=================
+'''
 entries_list = Listbox(leftFrame, exportselection=0, height=15, width=40)
 entries_list.pack(side=LEFT, fill=BOTH, expand=True)
 
@@ -119,12 +146,15 @@ entries_list_scrollbar.configure(command=entries_list.yview)
 entries_list.configure(yscrollcommand=entries_list_scrollbar.set)
 
 # entries_list.bind('<<ListboxSelect>>', select) #action for selected line
-
+'''
+entries_list = Pmw.ScrolledListBox(leftFrame, hscrollmode = 'none', vscrollmode = 'static', listbox_height = 15, listbox_width=40)
+#entries_list.pack(side=LEFT, fill=BOTH, expand=True)
+entries_list.grid(row = 0, column = 0, columnspan = 40)
 # =======num pad==========
 keyboard = []
-keys = "HMS789456123C0:"
+keys = "789456123C0:"
 i = 0
-for j in range(1, 6):
+for j in range(1, 5):
     for k in range(3):
         keyboard.append(Button(rightFrame, text=keys[i], font="Helvetica 15 bold", height=1, width=2))
         keyboard[i].grid(row=j, column=k, pady=2, padx=2)
@@ -132,17 +162,32 @@ for j in range(1, 6):
         i += 1
 
 # --------other buttons---------
+
 add_entry_button = Button(rightFrame, text="+", font="Helvetica 15 bold", height=6, width=7)
-add_entry_button.grid(row=1, column=4, rowspan=4, columnspan=2, pady=2, padx=2)
+add_entry_button.grid(row=1, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
 add_entry_button.bind('<Button-1>', add_entry)
 
 clear_one_button = Button(rightFrame, text="←", font="Helvetica 15 bold", height=1, width=2)
-clear_one_button.grid(row=5, column=4, pady=2, padx=2)
+clear_one_button.grid(row=0, column=4, pady=2, padx=2)
 clear_one_button.bind('<Button-1>', clear_one)
-
+'''
 modulo_button = Button(rightFrame, text="M24", font="Helvetica 15 bold", height=1, width=2)
 modulo_button.grid(row=5, column=5, pady=2, padx=2)
 modulo_button.bind('<Button-1>', add_entry)
+'''
+icons = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2, Button_font = "Helvetica 15 bold", pady = 2, padx = 2)
+                        # labelpos = 'w',
+                        # command = self.callback,
+                        # label_text = 'Horizontal',
+                        # frame_borderwidth = 2,
+                        # frame_relief = 'ridge'
+
+icons.grid(row = 0, column = 0, columnspan = 4)
+
+# Add some buttons to the horizontal RadioSelect.
+for text in ('D', 'W', 'P', 'R'):
+    icons.add(text)
+icons.invoke('R')
 
 # =====bottom status=============
 status = StringVar()
@@ -161,7 +206,9 @@ class Entry:
         self.seconds = int(self.input)
         self.add()
         self.update()
-        status.set(self.sum())
+        status.set('Total time: '+str(self.converter(self.seconds))+'\n'+str(self.sum())+' seconds')
+        top_frame_input.setentry('00:00:00')
+        #top_frame_input.delete(0, END)
         print(self.seconds)
         print(self.converter(self.seconds))
 
@@ -184,6 +231,7 @@ class Entry:
         global entries
         entries.append(self.seconds)
         print("Entries: "+str(entries))
+
 
     def sum(self):
         global total_info
