@@ -206,7 +206,7 @@ class Entry:
         self.seconds = int(self.input)
         self.add()
         self.update()
-        status.set('Total time: '+str(self.converter(self.seconds))+'\n'+str(self.sum())+' seconds')
+        status.set('Total time: '+str(self.converter(self.sum()))+'\n'+str(self.sum())+' seconds')
         top_frame_input.setentry('00:00:00')
         #top_frame_input.delete(0, END)
         print(self.seconds)
@@ -218,7 +218,11 @@ class Entry:
             h,m,s = re.split(':',self.input)
             self.input = int(datetime.timedelta(hours=int(h),minutes=int(m),seconds=int(s)).total_seconds())
         except:
-            self.input = re.sub("\D", "", self.input) # clean input from non-digit characters
+            try:
+                m,s = re.split(':',self.input)
+                self.input = int(datetime.timedelta(minutes=int(m),seconds=int(s)).total_seconds())
+            except:
+                self.input = re.sub("\D", "", self.input) # clean input from non-digit characters
 
         # self.input = self.input.replace("+", "") # simplest method (replace just one character)
             # in case this one above will make a troubles
