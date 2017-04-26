@@ -223,6 +223,7 @@ class Entry:
                 self.input = int(datetime.timedelta(minutes=int(m),seconds=int(s)).total_seconds())
             except:
                 self.input = re.sub("\D", "", self.input) # clean input from non-digit characters
+                self.input = int(datetime.timedelta(minutes=int(self.input)).total_seconds())
 
         # self.input = self.input.replace("+", "") # simplest method (replace just one character)
             # in case this one above will make a troubles
