@@ -50,6 +50,17 @@ def num_press(num):  # num pad button action
         top_frame_input.insert(END, num)
         top_frame_input.focus()
 
+def delete_item():
+
+    # delete a selected line from the listbox and from entries
+    print('It works')
+    try:
+        # get selected line index
+        index = entries_list.curselection()[0]
+        entries_list.delete(index)
+        entries.pop(index)
+    except IndexError:
+        pass
 '''
 def entries_update():
     entries_list.delete(0, END)
@@ -122,23 +133,6 @@ top_frame_input.component('entry').focus_set()
 top_frame_input.select_range(3,5)
 top_frame_input.icursor(5)
 
-
-# ======top icons==========
-
-top_frame_icons = []
-
-for i in range(0, 5):
-    top_frame_icons.append(
-
-        Button(topLeftFrame, text='X',
-
-               font="Helvetica 15 bold", height=1, width=2)
-
-    )
-
-    top_frame_icons[i].grid(row=0, column=i, sticky = W,ipadx = 10, ipady=1)
-
-
 # ===========Listbox with scrollbar=================
 '''
 entries_list = Listbox(leftFrame, exportselection=0, height=15, width=40)
@@ -162,7 +156,42 @@ entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 
                             )
 '''
 #entries_list.pack(side=LEFT, fill=BOTH, expand=True)
-entries_list.grid(row = 0, column = 0, columnspan = 40)
+entries_list.grid(row = 0, column = 0)
+
+# ======top icons==========
+
+top_left_buttons = Pmw.ButtonBox(topLeftFrame, Button_height=1,# Button_width=2,
+                                 Button_font ="Helvetica 15 bold", pady = 1, padx = 1)
+                        # labelpos = 'w',
+                        # command = self.callback,
+                        # label_text = 'Horizontal',
+                        # frame_borderwidth = 2,
+                        # frame_relief = 'ridge'
+
+top_left_buttons.grid(row = 0, column = 0, columnspan =2)
+
+# Add some buttons to the horizontal RadioSelect.
+top_left_buttons.add('Delete', command = delete_item)
+top_left_buttons.add('Edit')
+top_left_buttons.add('Save')
+top_left_buttons.add('Clear')
+
+
+'''
+top_frame_icons = []
+
+for i in range(0, 5):
+    top_frame_icons.append(
+
+        Button(topLeftFrame, text='X',
+
+               font="Helvetica 15 bold", height=1, width=2)
+
+    )
+
+    top_frame_icons[i].grid(row=0, column=i, sticky = W,ipadx = 10, ipady=1)
+'''
+
 # =======num pad==========
 keyboard = []
 keys = "789456123C0:"
@@ -188,19 +217,19 @@ modulo_button = Button(rightFrame, text="M24", font="Helvetica 15 bold", height=
 modulo_button.grid(row=5, column=5, pady=2, padx=2)
 modulo_button.bind('<Button-1>', add_entry)
 '''
-icons = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2, Button_font = "Helvetica 15 bold", pady = 2, padx = 2)
+select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2, Button_font ="Helvetica 15 bold", pady = 2, padx = 2)
                         # labelpos = 'w',
                         # command = self.callback,
                         # label_text = 'Horizontal',
                         # frame_borderwidth = 2,
                         # frame_relief = 'ridge'
 
-icons.grid(row = 0, column = 0, columnspan = 4)
+select_mode.grid(row = 0, column = 0, columnspan = 4)
 
 # Add some buttons to the horizontal RadioSelect.
 for text in ('D', 'W', 'P', 'R'):
-    icons.add(text)
-icons.invoke('R')
+    select_mode.add(text)
+select_mode.invoke('R')
 
 # =====bottom status=============
 status = StringVar()
