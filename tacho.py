@@ -5,7 +5,7 @@ from tkinter import *
 import re, datetime, Pmw, time
 
 entries = []
-total_info = ""
+#total_info = ""
 
 def add_entry(evt):  # For calculation button
     Entry()
@@ -43,8 +43,8 @@ def num_press(num):  # num pad button action
         clear_all("C")
     if num == "C":
         clear_all("C")
-    elif num == ",":  # yeah, I found it quite useful for my keyboard
-        top_frame_input.insert(END, ".")
+    elif num == ".":  # doesn't work because counter doesn't allow insert other thinks than numbers and ":"
+        top_frame_input.insert(END, ":")
     else:
 
         top_frame_input.insert(END, num)
@@ -93,9 +93,10 @@ bottomFrame = Frame(win)
 bottomFrame.grid(row=2, columnspan=2)
 
 # -------keys actions-----
-win.bind("<Return>", add_entry)
+#win.bind("<Return>", add_entry)
 win.bind("<KP_Enter>", add_entry)
 win.bind("<KP_Add>", add_entry)
+win.bind("KP_Decimal", num_press)
 
 # ==========input entry===========
 '''
@@ -116,6 +117,10 @@ top_frame_input = Pmw.Counter(topRightFrame,
                               entryfield_value = '00:00:00',
                               increment = 60)
 top_frame_input.grid(column = 0)
+
+top_frame_input.component('entry').focus_set()
+top_frame_input.select_range(3,5)
+top_frame_input.icursor(5)
 
 
 # ======top icons==========
@@ -148,6 +153,14 @@ entries_list.configure(yscrollcommand=entries_list_scrollbar.set)
 # entries_list.bind('<<ListboxSelect>>', select) #action for selected line
 '''
 entries_list = Pmw.ScrolledListBox(leftFrame, hscrollmode = 'none', vscrollmode = 'static', listbox_height = 15, listbox_width=40)
+'''
+entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 'static',
+                            scrolledlist_hscrollmode = 'none', scrolledlist_listbox_height = 15,
+                            scrolledlist_listbox_width=40,
+                            entryfield_validate = {'validator' : 'time'},
+                            entryfield_value = '00:00:00',
+                            )
+'''
 #entries_list.pack(side=LEFT, fill=BOTH, expand=True)
 entries_list.grid(row = 0, column = 0, columnspan = 40)
 # =======num pad==========
@@ -193,7 +206,7 @@ icons.invoke('R')
 status = StringVar()
 bottom_status_total = Label(bottomFrame, textvariable=status, bd=1, relief=SUNKEN,
                             font="Helvetica 15 bold", width=54)
-status.set(total_info)
+status.set("")
 bottom_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
 # ============================================
@@ -211,6 +224,8 @@ class Entry:
         #top_frame_input.delete(0, END)
         print(self.seconds)
         print(self.converter(self.seconds))
+        top_frame_input.select_range(3,5)
+        top_frame_input.icursor(5)
 
     def cleaner(self):
         self.input = re.sub("[^0-9:]", "", self.input) # leaves only digits and ":" into input
@@ -234,8 +249,15 @@ class Entry:
 
     def add(self):
         global entries
-        entries.append(self.seconds)
+        index = 0
+        try:
+            index = entries_list.curselection()[0]
+        except:
+            pass
+        #entries.append(self.seconds)
+        entries.insert(index,self.seconds)
         print("Entries: "+str(entries))
+        print('index: '+str(index))
 
 
     def sum(self):
@@ -248,6 +270,7 @@ class Entry:
         entries_list.delete(0, END)
         for e in entries:
             converted_entry = self.converter(e)
-            entries_list.insert(0, converted_entry)
+            #entries_list.insert(0, converted_entry)
+            entries_list.insert(END, converted_entry)
 
 win.mainloop()
