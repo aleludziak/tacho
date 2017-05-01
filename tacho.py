@@ -57,10 +57,10 @@ def num_press(num):  # num pad button action
         top_frame_input.focus()
 
 
-
+'''
 def get_selection():
     print(select_mode.getvalue())
-
+'''
 '''
 def entries_update():
     entries_list.delete(0, END)
@@ -309,14 +309,16 @@ class Data:
 
 
     def update(self):
+
         entries_list.delete(0, END)
-        for e in self.records:
-            converted_entry = str(e.get_mode()) + ' ' + str(self.converter(e.get_value()))
+        for record in self.records:
+            #converted_entry = str(record.get_mode()) + ' ' + str(self.converter(record.get_value()))
             #entries_list.insert(0, converted_entry)
-            entries_list.insert(END, converted_entry)
+            #entries_list.insert(END, converted_entry)
+            entries_list.insert(END, record)
 
     def info(self):
-        status.set('Total time: ' + str(self.sum())) #+str(self.converter(self.sum()))+'\n'+str(self.sum())+' seconds')
+        status.set('Total time: ' + str(self.converter(self.sum()))+'\n'+str(self.sum())+' seconds')
 
 class Entry:
     def __init__(self, mode, value):
@@ -345,7 +347,10 @@ class Entry:
     def get_mode(self):
         return self.mode
     def __str__(self):
-        return self.mode + self.value
+        mode_names = {'D':'Driving', 'W':'Work', 'P':'POA/availability', 'R':'Rest/Break'}
+        sec = self.value
+        convertion = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
+        return convertion + ' ' + mode_names[self.mode]
 
 start()
 win.mainloop()
