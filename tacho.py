@@ -10,6 +10,8 @@ import re, datetime, Pmw, time
 def start():
     global current_data
     current_data = Data()
+    current_data.update()
+    current_data.info()
 
 def add_entry(evt):  # For calculation button
     current_data.add()
@@ -215,7 +217,7 @@ top_left_buttons.grid(row = 0, column = 0, columnspan =2)
 top_left_buttons.add('Delete', command = lambda: current_data.delete_item())
 top_left_buttons.add('Edit')
 top_left_buttons.add('Save') # , command = get_selection)
-top_left_buttons.add('Clear')
+top_left_buttons.add('Clear', command = start)
 
 
 '''
@@ -297,14 +299,49 @@ class Data:
 
 
 
-    def sum(self):
-        summary = 0
-        #global total_info
-        #total = sum(entries)
-        #return total
-        for v in self.records:
-            summary += v.get_value()
-        return summary
+    def sum(self, v):
+        #global summary
+        total = 0
+        #summary = 0
+        if v == 'total':
+
+
+            for v in self.records:
+                total += v.get_value()
+            return total
+        else:
+
+            MODES = ('D', 'W', 'P', 'R')
+            '''
+            for v in MODES:
+                for x in self.records:
+                    for y in x.get_mode():
+                        summary += int(x.get_value)
+                        return summary
+            '''
+
+            summary = 0
+            for x in self.records:
+                #for v in x.get_mode():
+
+                if v == x.get_mode():
+
+                    summary += x.get_value()
+            return summary
+
+            '''
+            if v in MODES:
+
+                for v in self.records.get_mode():
+                    summary += v.get_value()
+
+                    return summary
+                    #for m in MODES:
+                     #   return sum(m.get_value())
+
+            else:
+                return total
+            '''
 
 
 
@@ -318,7 +355,13 @@ class Data:
             entries_list.insert(END, record)
 
     def info(self):
-        status.set('Total time: ' + str(self.converter(self.sum()))+'\n'+str(self.sum())+' seconds')
+        status.set('Total time: ' + str(self.converter(self.sum('total')))+'\n'
+                   +str(self.sum('total'))+' seconds'+'\n'
+                   +'Resting in total: '+str(self.converter(self.sum('R')))+'\n'
+                   +'Driving in total: '+str(self.converter(self.sum('D')))+'\n'
+                   +'Working in total: '+str(self.converter(self.sum('W')))+'\n'
+                   +'POA in total: '+str(self.converter(self.sum('P')))
+                   )
 
 class Entry:
     def __init__(self, mode, value):
