@@ -112,7 +112,7 @@ bottomFrame.grid(row=2, columnspan=2)
 #win.bind("<Return>", add_entry)
 win.bind("<KP_Enter>", add_entry)
 win.bind("<KP_Add>", add_entry)
-win.bind("KP_Decimal", num_press)
+win.bind("<KP_Decimal>", num_press)
 
 # ==========input entry===========
 '''
