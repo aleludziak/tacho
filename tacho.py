@@ -4,11 +4,17 @@
 from tkinter import *
 import re, datetime, Pmw, time
 
-entries = []
+#entries = []
 #total_info = ""
 
+def start():
+    global current_data
+    current_data = Data()
+
 def add_entry(evt):  # For calculation button
-    Entry()
+    current_data.add()
+    # Entry()
+
 '''
     global total_info, entries
     entry = top_frame_input.get()
@@ -33,9 +39,9 @@ def clear_all(evt):  # clear top_frame_input
 
 
 def clear_one(evt):  # clear last digit from top_frame_input
-    entry = top_frame_input.get()[:-1]
+    input = top_frame_input.get()[:-1]
     top_frame_input.delete(0, END)
-    top_frame_input.insert(0, entry)
+    top_frame_input.insert(0, input)
 
 
 def num_press(num):  # num pad button action
@@ -50,18 +56,7 @@ def num_press(num):  # num pad button action
         top_frame_input.insert(END, num)
         top_frame_input.focus()
 
-def delete_item():
 
-    # delete a selected line from the listbox and from entries
-    print('It works')
-    try:
-        # get selected line index
-        index = entries_list.curselection()[0]
-        entries_list.delete(index)
-        entries.pop(index)
-
-    except IndexError:
-        pass
 
 def get_selection():
     print(select_mode.getvalue())
@@ -217,9 +212,9 @@ top_left_buttons = Pmw.ButtonBox(topLeftFrame, Button_height=1,# Button_width=2,
 top_left_buttons.grid(row = 0, column = 0, columnspan =2)
 
 # Add some buttons to the horizontal RadioSelect.
-top_left_buttons.add('Delete', command = delete_item)
+top_left_buttons.add('Delete', command = lambda: current_data.delete_item())
 top_left_buttons.add('Edit')
-top_left_buttons.add('Save', command = get_selection)
+top_left_buttons.add('Save') # , command = get_selection)
 top_left_buttons.add('Clear')
 
 
@@ -247,66 +242,110 @@ bottom_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
 # ============================================
 
-class Entry:
+class Data:
 
     def __init__(self):
-        self.input = top_frame_input.get()
-        self.cleaner()
-        self.seconds = int(self.input)
-        self.add()
-        self.update()
-        status.set('Total time: '+str(self.converter(self.sum()))+'\n'+str(self.sum())+' seconds')
-        top_frame_input.setentry('00:00:00')
+        self.records = []
+        #self.input = top_frame_input.get()
+
+        #self.seconds = int(self.input)
+        #self.add()
+        #self.update()
+
+
         #top_frame_input.delete(0, END)
-        print(self.seconds)
-        print(self.converter(self.seconds))
-        top_frame_input.select_range(3,5)
-        top_frame_input.icursor(5)
+        #print(self.seconds)
+        #print(self.converter(self.seconds))
 
-    def cleaner(self):
-        self.input = re.sub("[^0-9:]", "", self.input) # leaves only digits and ":" into input
-        try:
-            h,m,s = re.split(':',self.input)
-            self.input = int(datetime.timedelta(hours=int(h),minutes=int(m),seconds=int(s)).total_seconds())
-        except:
-            try:
-                m,s = re.split(':',self.input)
-                self.input = int(datetime.timedelta(minutes=int(m),seconds=int(s)).total_seconds())
-            except:
-                self.input = re.sub("\D", "", self.input) # clean input from non-digit characters
-                self.input = int(datetime.timedelta(minutes=int(self.input)).total_seconds())
-
-        # self.input = self.input.replace("+", "") # simplest method (replace just one character)
-            # in case this one above will make a troubles
 
     def converter(self, sec):
         convertion = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return convertion
 
     def add(self):
-        global entries
+        #global entries
         index = 0
+        entry = Entry(select_mode.getvalue(), top_frame_input.get())
         try:
-            index = entries_list.curselection()[0]
+            index = self.records.curselection()[0]
         except:
             pass
         #entries.append(self.seconds)
-        entries.insert(index,self.seconds)
-        print("Entries: "+str(entries))
-        print('index: '+str(index))
+        self.records.insert(index,entry)
+        #print("Entries: "+str(entries))
+        #print('index: '+str(index))
+        top_frame_input.setentry('00:00:00')
+        top_frame_input.select_range(3,5)
+        top_frame_input.icursor(5)
+        self.info()
+        self.update()
+
+    def delete_item(self):
+        # delete a selected line from the listbox and from entries
+        # print('It works')
+        try:
+            # get selected line index
+            index = entries_list.curselection()[0]
+            entries_list.delete(index)
+            self.records.pop(index)
+            self.update()
+            self.info()
+
+        except IndexError:
+            pass
+
+
 
 
     def sum(self):
-        global total_info
-        total = sum(entries)
-        return total
+        summary = 0
+        #global total_info
+        #total = sum(entries)
+        #return total
+        for v in self.records:
+            summary += v.get_value()
+        return summary
+
 
 
     def update(self):
         entries_list.delete(0, END)
-        for e in entries:
-            converted_entry = self.converter(e)
+        for e in self.records:
+            converted_entry = str(e.get_mode()) + ' ' + str(self.converter(e.get_value()))
             #entries_list.insert(0, converted_entry)
             entries_list.insert(END, converted_entry)
 
+    def info(self):
+        status.set('Total time: ' + str(self.sum())) #+str(self.converter(self.sum()))+'\n'+str(self.sum())+' seconds')
+
+class Entry:
+    def __init__(self, mode, value):
+        self.mode = mode
+
+        self.value = value
+        self.cleaner()
+
+    def cleaner(self):
+        self.value = re.sub("[^0-9:]", "", self.value) # leaves only digits and ":" into input
+        try:
+            h,m,s = re.split(':',self.value)
+            self.value = int(datetime.timedelta(hours=int(h),minutes=int(m),seconds=int(s)).total_seconds())
+        except:
+            try:
+                m,s = re.split(':',self.value)
+                self.value = int(datetime.timedelta(minutes=int(m),seconds=int(s)).total_seconds())
+            except:
+                self.value = re.sub("\D", "", self.value) # clean input from non-digit characters
+                self.value = int(datetime.timedelta(minutes=int(self.value)).total_seconds())
+
+        # self.input = self.input.replace("+", "") # simplest method (replace just one character)
+            # in case this one above will make a troubles
+    def get_value(self):
+        return self.value
+    def get_mode(self):
+        return self.mode
+    def __str__(self):
+        return self.mode + self.value
+
+start()
 win.mainloop()
