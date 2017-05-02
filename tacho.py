@@ -136,7 +136,7 @@ select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
 select_mode.grid(row=0, column=0, columnspan=4)
 
 # Add some buttons to the horizontal RadioSelect.
-for name, symbol, background in (('D',u'\u2609', 'green'), ('W', u'\u2692', 'cyan'), ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'blue')):
+for name, symbol, background in (('D',u'\u2609', 'green'), ('W', u'\u2692', 'blue'), ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'red')):
     select_mode.add(name, text=symbol, background=background)
     #select_mode.setvalue(text)
 select_mode.invoke(3)
@@ -225,11 +225,11 @@ class Data:
         for record in self.records:
             entries_list.insert(END, str(line_number) + ') ' + str(record))
             if record.get_mode() == 'R':
-                entries_list.itemconfig(END, {'bg': 'blue'}, foreground='white')
+                entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
             elif record.get_mode() == 'P':
                 entries_list.itemconfig(END, {'bg': 'yellow'})
             elif record.get_mode() == 'W':
-                entries_list.itemconfig(END, {'bg': 'cyan'})
+                entries_list.itemconfig(END, {'bg': 'blue'}, foreground='white')
             elif record.get_mode() == 'D':
                 entries_list.itemconfig(END, {'bg': 'green'}, foreground='white')
 
