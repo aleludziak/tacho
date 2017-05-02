@@ -41,7 +41,7 @@ def num_press(num):  # num pad button action
 # =======tkinter window===========
 win = Tk()
 # win.geometry("775x325") # Force window size
-win.wm_title("Tacho 0.0.3")
+win.wm_title("Tacho 0.0.4")
 win.resizable(width=FALSE, height=FALSE)
 
 Pmw.initialise(win)
@@ -170,7 +170,7 @@ class Data:
         self.records = []
 
     def converter(self, sec):
-        conversion = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
+        conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return conversion
 
     def add(self):
@@ -219,10 +219,11 @@ class Data:
             return summary
 
     def update(self):
-
         entries_list.delete(0, END)
+        number = len(self.records)
         for record in self.records:
-            entries_list.insert(END, record)
+            entries_list.insert(END, str(number) + ') ' + str(record))
+            number -= 1
 
     def info(self):
         status.set('Total time: ' + str(self.converter(self.sum('total')))+'\n' +
@@ -237,21 +238,21 @@ class Data:
 class Entry:
     def __init__(self, mode, value):
         self.mode = mode
-
         self.value = value
         self.cleaner()
 
     def cleaner(self):
-        self.value = re.sub("[^0-9:]", "", self.value)  # leaves only digits and ":" into input
+        user_input = str(self.value)
+        self.value = re.sub('[^0-9:]', '', user_input)  # leaves only digits and ":" into input
         try:
-            h, m, s = re.split(':', self.value)
+            h, m, s = re.split(':', user_input)
             self.value = int(datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s)).total_seconds())
         except:
             try:
-                m, s = re.split(':', self.value)
+                m, s = re.split(':', user_input)
                 self.value = int(datetime.timedelta(minutes=int(m), seconds=int(s)).total_seconds())
             except:
-                self.value = re.sub("\D", "", self.value)  # clean input from non-digit characters
+                self.value = re.sub('\D', '', user_input)  # clean input from non-digit characters
                 self.value = int(datetime.timedelta(minutes=int(self.value)).total_seconds())
 
         # self.input = self.input.replace("+", "") # simplest method (replace just one character)
@@ -265,7 +266,7 @@ class Entry:
     def __str__(self):
         mode_names = {'D': 'Driving', 'W': 'Work', 'P': 'POA/availability', 'R': 'Rest/Break'}
         sec = self.value
-        conversion = "%d:%02d:%02d" % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
+        conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return conversion + ' ' + mode_names[self.mode]
 
 start()
