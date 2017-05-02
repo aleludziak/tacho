@@ -136,8 +136,8 @@ select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
 select_mode.grid(row=0, column=0, columnspan=4)
 
 # Add some buttons to the horizontal RadioSelect.
-for name, symbol in (('D',u'\u2609'), ('W',u'\u2692'), ('P',u'\u26DD'), ('R',u'\u29E6')):
-    select_mode.add(name, text=symbol)
+for name, symbol, background in (('D',u'\u2609', 'green'), ('W', u'\u2692', 'cyan'), ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'blue')):
+    select_mode.add(name, text=symbol, background=background)
     #select_mode.setvalue(text)
 select_mode.invoke(3)
 
