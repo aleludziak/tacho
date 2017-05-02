@@ -220,10 +220,19 @@ class Data:
 
     def update(self):
         entries_list.delete(0, END)
-        number = len(self.records)
+        line_number = len(self.records)
         for record in self.records:
-            entries_list.insert(END, str(number) + ') ' + str(record))
-            number -= 1
+            entries_list.insert(END, str(line_number) + ') ' + str(record))
+            if record.get_mode() == 'R':
+                entries_list.itemconfig(END, {'bg': 'blue'}, foreground='white')
+            elif record.get_mode() == 'P':
+                entries_list.itemconfig(END, {'bg': 'yellow'})
+            elif record.get_mode() == 'W':
+                entries_list.itemconfig(END, {'bg': 'cyan'})
+            elif record.get_mode() == 'D':
+                entries_list.itemconfig(END, {'bg': 'green'}, foreground='white')
+
+            line_number -= 1
 
     def info(self):
         status.set('Total time: ' + str(self.converter(self.sum('total')))+'\n' +
