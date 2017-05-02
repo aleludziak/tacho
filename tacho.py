@@ -117,7 +117,7 @@ for j in range(1, 5):
 
 # --------other buttons---------
 
-add_entry_button = Button(rightFrame, text="+", font="Helvetica 15 bold", height=6, width=7)
+add_entry_button = Button(rightFrame, text='+', font="Helvetica 15 bold", height=6, width=7)
 add_entry_button.grid(row=1, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
 add_entry_button.bind('<Button-1>', add_entry)
 
@@ -136,9 +136,10 @@ select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
 select_mode.grid(row=0, column=0, columnspan=4)
 
 # Add some buttons to the horizontal RadioSelect.
-for text in ('D', 'W', 'P', 'R'):
-    select_mode.add(text)
-select_mode.invoke('R')
+for name, symbol in (('D',u'\u2609'), ('W',u'\u2692'), ('P',u'\u26DD'), ('R',u'\u29E6')):
+    select_mode.add(name, text=symbol)
+    #select_mode.setvalue(text)
+select_mode.invoke(3)
 
 # ======top left buttons==========
 
