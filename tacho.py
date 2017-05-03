@@ -103,8 +103,8 @@ entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 
 
 entries_list.grid(row=0, column=0)
 
-
-# =======num pad==========
+# =======buttons===========
+# -------num pad-----------
 keyboard = []
 keys = "789456123C0:"
 i = 0
@@ -115,35 +115,27 @@ for j in range(1, 5):
         keyboard[i]["command"] = lambda x=keys[i]: num_press(x)
         i += 1
 
-# --------other buttons---------
-
+# --------other buttons in num pad---------
 add_entry_button = Button(rightFrame, text='+', font="Helvetica 15 bold", height=6, width=7, command=add_entry)
 add_entry_button.grid(row=1, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
 
 clear_one_button = Button(rightFrame, text="←", font="Helvetica 15 bold", height=1, width=2, command=clear_one)
 clear_one_button.grid(row=0, column=4, pady=2, padx=2)
 
-'''
-modulo_button = Button(rightFrame, text="M24", font="Helvetica 15 bold", height=1, width=2)
-modulo_button.grid(row=5, column=5, pady=2, padx=2)
-modulo_button.bind('<Button-1>', add_entry)
-'''
 # ------buttons to change mode of entry-------
 select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
                               Button_font="Helvetica 15 bold", pady=2, padx=2)
 
 select_mode.grid(row=0, column=0, columnspan=4)
 
-# Add some buttons to the horizontal RadioSelect.
+# Add some buttons to the horizontal RadioSelect - mode selection buttons.
 for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'blue'),
                                  ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'red')):
     select_mode.add(name, text=symbol, background=background)
 
+select_mode.invoke(3)  # select break/rest as default
 
-select_mode.invoke(3)
-
-# ======top left buttons==========
-
+# ------top left buttons-------
 top_left_buttons = Pmw.ButtonBox(topLeftFrame, Button_height=1,  # Button_width=2,
                                  Button_font="Helvetica 15 bold", pady=1, padx=1)
 
@@ -171,7 +163,7 @@ class Data:
     def __init__(self):
         self.records = []
 
-    @staticmethod
+    @staticmethod  # this let this method be called in class or outside
     def converter(sec):
         conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return conversion
@@ -181,25 +173,24 @@ class Data:
             index = 0
             entry = Entry(select_mode.getvalue(), top_frame_input.get())
             try:
-                index = entries_list.curselection()[0]
+                index = entries_list.curselection()[0]  # try get position where entry should be added
             except IndexError:
                 pass
 
             self.records.insert(index, entry)
             top_frame_input.setentry('00:00:00')
-            top_frame_input.select_range(3, 5)
+            top_frame_input.select_range(3, 5)  # entry field should be focus on minutes
             top_frame_input.icursor(5)
             self.info()
             self.update()
 
     def delete_item(self):
         # delete a selected line from the listbox and from entries
-        # print('It works')
         try:
             # get selected line index
             index = entries_list.curselection()[0]
-            entries_list.delete(index)
-            self.records.pop(index)
+            entries_list.delete(index)  # delete item from listbox in GUI
+            self.records.pop(index)  # delete item from data list
             self.update()
             self.info()
 
@@ -214,7 +205,7 @@ class Data:
             for v in self.records:
                 total += v.get_value()
             return total
-        else:
+        else:  # sum for mode
 
             summary = 0
             for x in self.records:
@@ -227,6 +218,7 @@ class Data:
         line_number = len(self.records)
         for record in self.records:
             entries_list.insert(END, str(line_number) + ') ' + str(record))
+            # color lines:
             if record.get_mode() == 'R':
                 entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
             elif record.get_mode() == 'P':
@@ -278,7 +270,7 @@ class Entry:
 
     def __str__(self):
         mode_names = {'D': 'Driving', 'W': 'Work', 'P': 'POA/availability', 'R': 'Rest/Break'}
-        conversion = Data.converter(self.value)
+        conversion = Data().converter(self.value)  # call static method from class Data
         # sec = self.value
         # conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return conversion + ' ' + mode_names[self.mode]
