@@ -11,16 +11,16 @@ def start():
     current_data.info()
 
 
-def add_entry(evt):
+def add_entry():
     current_data.add()
 
 
-def clear_all(evt):  # clear top_frame_input
+def clear_all():  # clear top_frame_input
     top_frame_input.delete(0, END)
     top_frame_input.focus()
 
 
-def clear_one(evt):  # clear last digit from top_frame_input
+def clear_one():  # clear last digit from top_frame_input
     user_input = top_frame_input.get()[:-1]
     top_frame_input.delete(0, END)
     top_frame_input.insert(0, user_input)
@@ -28,9 +28,9 @@ def clear_one(evt):  # clear last digit from top_frame_input
 
 def num_press(num):  # num pad button action
     if top_frame_input.get() == '00:00:00':
-        clear_all("C")
+        clear_all()
     if num == "C":
-        clear_all("C")
+        clear_all()
     elif num == ".":  # doesn't work because counter doesn't allow insert other thinks than numbers and ":"
         top_frame_input.insert(END, ":")
     else:
@@ -68,10 +68,10 @@ bottomFrame = Frame(win)
 bottomFrame.grid(row=2, columnspan=2)
 
 # -------keys actions-----
-win.bind("<Return>", add_entry)
-win.bind("<KP_Enter>", add_entry)
-win.bind("<KP_Add>", add_entry)
-win.bind("<KP_Decimal>", num_press)
+win.bind("<Return>", lambda a: add_entry())
+win.bind("<KP_Enter>", lambda a: add_entry())
+win.bind("<KP_Add>", lambda a: add_entry())
+# win.bind("<KP_Decimal>", lambda a: num_press(":"))
 
 # ==========input entry===========
 
@@ -117,13 +117,12 @@ for j in range(1, 5):
 
 # --------other buttons---------
 
-add_entry_button = Button(rightFrame, text='+', font="Helvetica 15 bold", height=6, width=7)
+add_entry_button = Button(rightFrame, text='+', font="Helvetica 15 bold", height=6, width=7, command=add_entry)
 add_entry_button.grid(row=1, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
-add_entry_button.bind('<Button-1>', add_entry)
 
-clear_one_button = Button(rightFrame, text="←", font="Helvetica 15 bold", height=1, width=2)
+clear_one_button = Button(rightFrame, text="←", font="Helvetica 15 bold", height=1, width=2, command=clear_one)
 clear_one_button.grid(row=0, column=4, pady=2, padx=2)
-clear_one_button.bind('<Button-1>', clear_one)
+
 '''
 modulo_button = Button(rightFrame, text="M24", font="Helvetica 15 bold", height=1, width=2)
 modulo_button.grid(row=5, column=5, pady=2, padx=2)
@@ -136,9 +135,11 @@ select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
 select_mode.grid(row=0, column=0, columnspan=4)
 
 # Add some buttons to the horizontal RadioSelect.
-for name, symbol, background in (('D',u'\u2609', 'green'), ('W', u'\u2692', 'blue'), ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'red')):
+for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'blue'),
+                                 ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'red')):
     select_mode.add(name, text=symbol, background=background)
-    #select_mode.setvalue(text)
+
+
 select_mode.invoke(3)
 
 # ======top left buttons==========
@@ -170,7 +171,8 @@ class Data:
     def __init__(self):
         self.records = []
 
-    def converter(self, sec):
+    @staticmethod
+    def converter(sec):
         conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return conversion
 
@@ -180,7 +182,7 @@ class Data:
             entry = Entry(select_mode.getvalue(), top_frame_input.get())
             try:
                 index = entries_list.curselection()[0]
-            except:
+            except IndexError:
                 pass
 
             self.records.insert(index, entry)
@@ -258,11 +260,11 @@ class Entry:
         try:
             h, m, s = re.split(':', user_input)
             self.value = int(datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s)).total_seconds())
-        except:
+        except ValueError:
             try:
                 m, s = re.split(':', user_input)
                 self.value = int(datetime.timedelta(minutes=int(m), seconds=int(s)).total_seconds())
-            except:
+            except ValueError:
                 self.value = re.sub('\D', '', user_input)  # clean input from non-digit characters
                 self.value = int(datetime.timedelta(minutes=int(self.value)).total_seconds())
 
@@ -276,8 +278,9 @@ class Entry:
 
     def __str__(self):
         mode_names = {'D': 'Driving', 'W': 'Work', 'P': 'POA/availability', 'R': 'Rest/Break'}
-        sec = self.value
-        conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
+        conversion = Data.converter(self.value)
+        # sec = self.value
+        # conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
         return conversion + ' ' + mode_names[self.mode]
 
 start()
