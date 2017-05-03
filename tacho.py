@@ -248,7 +248,7 @@ class Entry:
 
     def cleaner(self):
         user_input = str(self.value)
-        self.value = re.sub('[^0-9:]', '', user_input)  # leaves only digits and ":" into input
+        user_input = re.sub('[^0-9:]', '', user_input)  # leaves only digits and ":" into input
         try:
             h, m, s = re.split(':', user_input)
             self.value = int(datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s)).total_seconds())
