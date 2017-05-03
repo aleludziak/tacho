@@ -175,19 +175,20 @@ class Data:
         return conversion
 
     def add(self):
-        index = 0
-        entry = Entry(select_mode.getvalue(), top_frame_input.get())
-        try:
-            index = entries_list.curselection()[0]
-        except:
-            pass
+        if str(top_frame_input.get()) != '00:00:00':
+            index = 0
+            entry = Entry(select_mode.getvalue(), top_frame_input.get())
+            try:
+                index = entries_list.curselection()[0]
+            except:
+                pass
 
-        self.records.insert(index, entry)
-        top_frame_input.setentry('00:00:00')
-        top_frame_input.select_range(3, 5)
-        top_frame_input.icursor(5)
-        self.info()
-        self.update()
+            self.records.insert(index, entry)
+            top_frame_input.setentry('00:00:00')
+            top_frame_input.select_range(3, 5)
+            top_frame_input.icursor(5)
+            self.info()
+            self.update()
 
     def delete_item(self):
         # delete a selected line from the listbox and from entries
