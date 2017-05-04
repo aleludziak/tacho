@@ -2,6 +2,7 @@ from tkinter import *
 import re
 import datetime
 import Pmw
+import time
 
 
 def start():
@@ -165,8 +166,13 @@ class Data:
 
     @staticmethod  # this let this method be called in class or outside
     def converter(sec):
-        conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
-        return conversion
+        if sec < 0:  # This is temporary solution, there is a problem with negative modulo
+            sec *= -1
+            conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)
+            return '-'+str(conversion)
+        else:
+            conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
+            return conversion
 
     def add(self):
         if str(top_frame_input.get()) != '00:00:00':
@@ -213,6 +219,30 @@ class Data:
                     summary += x.get_value()
             return summary
 
+    def time_remaining(self, v):
+
+        if v == 'total':
+            total_remaining = 54000  # 15h = 54000 seconds
+            total_remaining -= self.sum('total')
+
+            if total_remaining < 0:
+                total_remaining = self.converter(total_remaining)
+                return str(total_remaining)+' TIME OUT!'
+            return self.converter(total_remaining)
+
+        # remaining time for modes
+        elif v == 'D':
+            driving_remaining = 36000  # 10h
+            driving_remaining -= self.sum('D')
+            if driving_remaining < 0:
+                return str(self.converter(driving_remaining))+' TIME OUT!'
+            else:
+                return self.converter(driving_remaining)
+
+
+
+
+
     def update(self):
         entries_list.delete(0, END)
         line_number = len(self.records)
@@ -231,12 +261,13 @@ class Data:
             line_number -= 1
 
     def info(self):
-        status.set('Total time: ' + str(self.converter(self.sum('total')))+'\n' +
-                   str(self.sum('total'))+' seconds'+'\n' +
-                   'Resting in total: '+str(self.converter(self.sum('R')))+'\n' +
-                   'Driving in total: '+str(self.converter(self.sum('D')))+'\n' +
-                   'Working in total: '+str(self.converter(self.sum('W')))+'\n' +
-                   'POA in total: '+str(self.converter(self.sum('P')))
+        status.set('Driving: '+str(self.converter(self.sum('D'))) +
+                   ' / time remaining: '+str(self.time_remaining('D'))+'\n' +
+                   'Work: '+str(self.converter(self.sum('W')))+'\n' +
+                   'POA: '+str(self.converter(self.sum('P')))+'\n' +
+                   'Rest: '+str(self.converter(self.sum('R')))+'\n' +
+                   'Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
+                   str(self.time_remaining('total'))
                    )
 
 
