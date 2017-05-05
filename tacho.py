@@ -2,7 +2,6 @@ from tkinter import *
 import re
 import datetime
 import Pmw
-import time
 
 
 def start():
@@ -239,9 +238,29 @@ class Data:
             else:
                 return self.converter(driving_remaining)
 
+# __________This is in progress, doesn't work very well yet__________
+    def was_break(self):
+        global info_list
+        driving_time = 0
+        info = ''
+        info_list = []
 
+        for x in self.records:
+            print(x.get_mode())
 
+            if x.get_mode() == 'D':
+                driving_time += x.get_value()
 
+            if x.get_mode() == 'R' or driving_time > 120:  # and x.get_value() == 120:
+                if driving_time > 120:
+
+                    info = "Too much driving"
+
+                    info_list.append(info)
+
+                return info+str(driving_time)+str(info_list)
+        return info+str(driving_time)
+# ______________________________________________
 
     def update(self):
         entries_list.delete(0, END)
@@ -267,7 +286,8 @@ class Data:
                    'POA: '+str(self.converter(self.sum('P')))+'\n' +
                    'Rest: '+str(self.converter(self.sum('R')))+'\n' +
                    'Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
-                   str(self.time_remaining('total'))
+                   str(self.time_remaining('total'))+'\n' +
+                   str(self.was_break())
                    )
 
 
