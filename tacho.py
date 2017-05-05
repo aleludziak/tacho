@@ -3,7 +3,6 @@ import re
 import datetime
 import Pmw
 
-
 def start():
     global current_data
     current_data = Data()
@@ -240,7 +239,7 @@ class Data:
 
 # __________This is in progress, doesn't work very well yet__________
     def was_break(self):
-        global info_list
+        #global info_list
         driving_time = 0
         info = ''
         info_list = []
@@ -251,15 +250,16 @@ class Data:
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
 
-            if x.get_mode() == 'R' or driving_time > 120:  # and x.get_value() == 120:
+            if x.get_mode() == 'R'or driving_time > 120:  # and x.get_value() == 120:
                 if driving_time > 120:
 
                     info = "Too much driving"
 
                     info_list.append(info)
+                driving_time = 0
 
-                return info+str(driving_time)+str(info_list)
-        return info+str(driving_time)
+                #return info+str(driving_time)+str(info_list)
+        return info+str(driving_time)+str(info_list)
 # ______________________________________________
 
     def update(self):
