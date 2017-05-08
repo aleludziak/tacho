@@ -241,10 +241,10 @@ class Data:
 # __________This is in progress, doesn't work very well yet__________
     def was_break(self):
         driving_time = 0
+        time_before_break = 0
         info_list = []
 
         for x in self.records:
-
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
 
@@ -256,12 +256,26 @@ class Data:
                     info_list.append(info)
                 driving_time = 0
 
+        for y in self.records:
+            #print(y.get_mode())
+            if y.get_mode() == 'D' or y.get_mode() == 'W':
+                time_before_break += y.get_value()
+            print(time_before_break)
+
+            if (y.get_mode() == 'R' and y.get_value() >= 2700) or time_before_break > 21600:
+                if time_before_break > 21600:
+                    info_break = "Break after 6h work needed"
+                    info_list.append(info_break)
+                time_before_break = 0
+
         if not info_list:
             return "No infringements found"
 
         else:
+            all_infringements = ''
             for x in set(info_list):
-                return "Infringements: "+"{0}: {1}".format(x,info_list.count(x))
+                all_infringements += "{0}: {1}\n".format(x,info_list.count(x))
+            return "Infringements:\n"+all_infringements
 
 # ______________________________________________
 
@@ -283,13 +297,14 @@ class Data:
             line_number -= 1
 
     def info(self):
-        status.set('Driving: '+str(self.converter(self.sum('D'))) +
+        status.set('Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
+                   str(self.time_remaining('total'))+'\n' + '\n' +
+                   'Driving: '+str(self.converter(self.sum('D'))) +
                    ' / time remaining: '+str(self.time_remaining('D'))+'\n' +
-                   'Work: '+str(self.converter(self.sum('W')))+'\n' +
-                   'POA: '+str(self.converter(self.sum('P')))+'\n' +
-                   'Rest: '+str(self.converter(self.sum('R')))+'\n' +
-                   'Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
-                   str(self.time_remaining('total'))+'\n' +
+                   'Work: '+str(self.converter(self.sum('W')))+' | ' +
+                   'POA: '+str(self.converter(self.sum('P')))+' | ' +
+                   'Rest: '+str(self.converter(self.sum('R')))+'\n' + '\n' +
+
                    str(self.was_break())
                    )
 
