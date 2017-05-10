@@ -250,9 +250,31 @@ class Data:
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
 
-            if (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)): # and (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)):
-                first_break = True
-                print("Firdt"+str(first_break))
+            if x.get_mode() == 'R' and (1800 <= x.get_value() < 2700): # and (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)):
+                #first_break = True
+                #print("Firdt"+str(first_break))
+                for i in self.records:
+                    if i.get_mode() == 'R' and (900 <= i.get_value() < 1800):
+                        print('IT ISSSSSS')
+                        first_break = True
+
+                if first_break is True:
+
+                    if driving_time > 16200:
+
+
+                        info = "Break after 4,5h driving needed"
+
+                        info_list.append(info)
+                    print(driving_time)
+                    driving_time = 0
+
+                    if time_before_break > 21600:
+                        info_break = "Break after 6h work needed"
+                        info_list.append(info_break)
+                    print(time_before_break)
+                    time_before_break = 0
+
             '''
             if (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)) and (first_break is True): # and (first_break is True):
                 print('Its ok')
@@ -261,8 +283,8 @@ class Data:
                 if first_break is True:
                     print('it works')
                 '''
-            if (x.get_mode() == 'R' and x.get_value() >= 2700) or (driving_time > 16200)\
-                    or ((x.get_mode() == 'R' and (900 <= x.get_value() < 1800)) and (first_break is True)):  # 4,5h:
+            if (x.get_mode() == 'R' and x.get_value() >= 2700) or (driving_time > 16200):#\
+                    #or ((x.get_mode() == 'R' and (900 <= x.get_value() < 1800)) and (first_break is True)):  # 4,5h:
                 print(first_break)
                 if driving_time > 16200:
 
@@ -270,19 +292,20 @@ class Data:
 
                     info_list.append(info)
                 driving_time = 0
-                first_break = False
+                #first_break = False
 
         for y in self.records:
             #print(y.get_mode())
             if y.get_mode() == 'D' or y.get_mode() == 'W':
                 time_before_break += y.get_value()
-            print(time_before_break)
-
+            # print(time_before_break)
+            '''
             if (y.get_mode() == 'R' and (1800 <= y.get_value() < 2700)): # and (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)):
                 break_first = True
+            '''
+            if (y.get_mode() == 'R' and y.get_value() >= 2700) or time_before_break > 21600: #\
+                    #or ((y.get_mode() == 'R' and (900 <= y.get_value() < 1800)) and (break_first is True)):
 
-            if (y.get_mode() == 'R' and y.get_value() >= 2700) or time_before_break > 21600\
-                    or ((y.get_mode() == 'R' and (900 <= y.get_value() < 1800)) and (break_first is True)):
                 if time_before_break > 21600:
                     info_break = "Break after 6h work needed"
                     info_list.append(info_break)
