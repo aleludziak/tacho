@@ -174,6 +174,8 @@ class Data:
             return conversion
 
     def add(self):
+        # Entries are added on the beginning of list. This is because I want them show up on top of the listbox.
+        # I can reversed it, but then there is an issue with adding item on current position.
         if str(top_frame_input.get()) != '00:00:00':
             index = 0
             entry = Entry(select_mode.getvalue(), top_frame_input.get())
@@ -238,136 +240,69 @@ class Data:
             else:
                 return self.converter(driving_remaining)
 
-# __________This is in progress, doesn't work very well yet__________
-
     def was_break(self):
-        driving_time = 0
-        time_before_break = 0
-        info_list = []
+        driving_time = 0  # can't be more than 4,5h before break
+        working_time = 0  # it's time of work or driving and can't be more than 6h
+        infringements_list = []
         first_break = False
-        break_first = 0
         second_break = False
-        split_break = False
 
-        for x in reversed(self.records): #self.records:
+        for x in reversed(self.records):
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
 
             if x.get_mode() == 'D' or x.get_mode() == 'W':
-                time_before_break += x.get_value()
+                working_time += x.get_value()
 
             if x.get_mode() == 'R' and (900 <= x.get_value() < 1800):
                 first_break = True
 
+            # First break must be at least 15 minutes and second 30 minutes.
             if x.get_mode() == 'R' and (1800 <= x.get_value() < 2700):
-
                 if first_break is True:
                     second_break = True
                 else:
                     first_break = True
 
-            '''
-            if x.get_mode() == 'R' and (1800 <= x.get_value() < 2700): # and (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)):
-                #first_break = True
-                #print("Firdt"+str(first_break))
-
-                for i in reversed(self.records[1:]):
-                    if i.get_mode() == 'R' and (900 <= i.get_value() < 1800):
-                        print('IT ISSSSSS')
-                        first_break = True
-
-                    if i.get_mode() == 'R' and (1800 <= x.get_value() < 2700):
-
-                        first_break = False
-
-                print(first_break)
-                if first_break is True:
-
-                    if driving_time > 16200:
-
-
-                        info = "Break after 4,5h driving needed"
-
-                        info_list.append(info)
-                    print(driving_time)
-                    driving_time = 0
-
-                    if time_before_break > 21600:
-                        info_break = "Break after 6h work needed"
-                        info_list.append(info_break)
-                    print(time_before_break)
-                    time_before_break = 0
-                #first_break = False
-
-            '''
-            if (x.get_mode() == 'R' and x.get_value() >= 2700) or (second_break is True): # or break_first >=2700: # or (driving_time > 16200):#\
-                    #or ((x.get_mode() == 'R' and (900 <= x.get_value() < 1800)) and (first_break is True)):  # 4,5h:
-                #print(first_break)
+            if (x.get_mode() == 'R' and x.get_value() >= 2700) or (second_break is True):
                 if driving_time > 16200:
 
                     info = "Break after 4,5h driving needed"
 
-                    info_list.append(info)
+                    infringements_list.append(info)
                 driving_time = 0
-                #first_break = False
 
-                if time_before_break > 21600:
+                if working_time > 21600:
                     info_break = "Break after 6h work needed"
-                    info_list.append(info_break)
-                time_before_break = 0
+                    infringements_list.append(info_break)
+                working_time = 0
                 first_break = False
                 second_break = False
 
             if driving_time > 16200:
-
                 info = "Break after 4,5h driving needed"
-                info_list.append(info)
+                infringements_list.append(info)
                 driving_time = 0
-                #first_break = False
-                #second_break = False
 
-            if time_before_break > 21600:
+            if working_time > 21600:
                 info_break = "Break after 6h work needed"
-                info_list.append(info_break)
-                time_before_break = 0
-                #first_break = False
-                #second_break = False
+                infringements_list.append(info_break)
+                working_time = 0
 
-        '''
-        for y in self.records:
-            #print(y.get_mode())
-            if y.get_mode() == 'D' or y.get_mode() == 'W':
-                time_before_break += y.get_value()
-            # print(time_before_break)
-
-            if (y.get_mode() == 'R' and (1800 <= y.get_value() < 2700)): # and (x.get_mode() == 'R' and (1800 <= x.get_value() < 2700)):
-                break_first = True
-
-            if (y.get_mode() == 'R' and y.get_value() >= 2700) or time_before_break > 21600: #\
-                    #or ((y.get_mode() == 'R' and (900 <= y.get_value() < 1800)) and (break_first is True)):
-
-                if time_before_break > 21600:
-                    info_break = "Break after 6h work needed"
-                    info_list.append(info_break)
-                time_before_break = 0
-        '''
-        if not info_list:
+        if not infringements_list:
             return "No infringements found"
-
         else:
             all_infringements = ''
-            for x in set(info_list):
-                all_infringements += "{0}: {1}\n".format(x,info_list.count(x))
+            for x in set(infringements_list):
+                all_infringements += "{0}: {1}\n".format(x,infringements_list.count(x))
             return "Infringements:\n"+all_infringements
-
-# ______________________________________________
 
     def update(self):
         entries_list.delete(0, END)
         line_number = len(self.records)
         for record in self.records:
             entries_list.insert(END, str(line_number) + ') ' + str(record))
-            # color lines:
+            # color specific lines:
             if record.get_mode() == 'R':
                 entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
             elif record.get_mode() == 'P':
@@ -398,6 +333,7 @@ class Entry:
         self.value = value
         self.cleaner()
 
+    # Before entry will be added it has to be cleaned from user mistakes and converted from HH:MM:SS to seconds
     def cleaner(self):
         user_input = str(self.value)
         user_input = re.sub('[^0-9:]', '', user_input)  # leaves only digits and ":" into input
