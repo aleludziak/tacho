@@ -165,6 +165,7 @@ class Data:
 
     @staticmethod  # this let this method be called in class or outside
     def converter(sec):
+        # Conversion from seconds to HH:MM:SS, to be more readable for user
         if sec < 0:  # This is temporary solution, there is a problem with negative modulo
             sec *= -1
             conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)
@@ -188,7 +189,7 @@ class Data:
             top_frame_input.setentry('00:00:00')
             top_frame_input.select_range(3, 5)  # entry field should be focus on minutes
             top_frame_input.icursor(5)
-            self.info()
+
             self.update()
 
     def delete_item(self):
@@ -199,7 +200,6 @@ class Data:
             entries_list.delete(index)  # delete item from listbox in GUI
             self.records.pop(index)  # delete item from data list
             self.update()
-            self.info()
 
         except IndexError:
             pass
@@ -226,21 +226,17 @@ class Data:
             total_remaining = 54000  # 15h = 54000 seconds
             total_remaining -= self.sum('total')
 
-            if total_remaining < 0:
-                total_remaining = self.converter(total_remaining)
-                return str(total_remaining)+' TIME OUT!'
-            return self.converter(total_remaining)
+            return total_remaining
 
         # remaining time for modes
         elif v == 'D':
             driving_remaining = 36000  # 10h
             driving_remaining -= self.sum('D')
-            if driving_remaining < 0:
-                return str(self.converter(driving_remaining))+' TIME OUT!'
-            else:
-                return self.converter(driving_remaining)
 
-    def was_break(self):
+            return driving_remaining
+
+    def daily_infringements(self):
+
         driving_time = 0  # can't be more than 4,5h before break
         working_time = 0  # it's time of work or driving and can't be more than 6h
         infringements_list = []
@@ -268,7 +264,6 @@ class Data:
                 if driving_time > 16200:
 
                     info = "Break after 4,5h driving needed"
-
                     infringements_list.append(info)
                 driving_time = 0
 
@@ -289,15 +284,31 @@ class Data:
                 infringements_list.append(info_break)
                 working_time = 0
 
-        if not infringements_list:
-            return "No infringements found"
+        if self.time_remaining('total') < 0:
+            infringements_list.append('TOTAL TIME OUT')
+        if self.time_remaining('D') < 0:
+            infringements_list.append('DRIVING TIME OUT')
+
+        return infringements_list
+
+    def lineup_infringements(self, items_list):
+        # Takes list of infringements and change it to readable string
+        if not items_list:
+            info = 'No infringements found'
+            return info
         else:
             all_infringements = ''
-            for x in set(infringements_list):
-                all_infringements += "{0}: {1}\n".format(x,infringements_list.count(x))
-            return "Infringements:\n"+all_infringements
+            for x in set(items_list):
+                if items_list.count(x) == 1:
+                    all_infringements += "{0}\n".format(x, items_list.count(x))
+
+                else:
+                    all_infringements += "{0}: {1}\n".format(x, items_list.count(x))
+            info = "Infringements:\n"+all_infringements
+            return info
 
     def update(self):
+
         entries_list.delete(0, END)
         line_number = len(self.records)
         for record in self.records:
@@ -314,16 +325,17 @@ class Data:
 
             line_number -= 1
 
+        self.info()
+
     def info(self):
         status.set('Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
-                   str(self.time_remaining('total'))+'\n' + '\n' +
+                   str(self.converter(self.time_remaining('total')))+'\n' + '\n' +
                    'Driving: '+str(self.converter(self.sum('D'))) +
-                   ' / time remaining: '+str(self.time_remaining('D'))+'\n' +
+                   ' / time remaining: '+str(self.converter(self.time_remaining('D')))+'\n' +
                    'Work: '+str(self.converter(self.sum('W')))+' | ' +
                    'POA: '+str(self.converter(self.sum('P')))+' | ' +
                    'Rest: '+str(self.converter(self.sum('R')))+'\n' + '\n' +
-
-                   str(self.was_break())
+                   self.lineup_infringements(self.daily_infringements())
                    )
 
 
