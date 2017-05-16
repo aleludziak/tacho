@@ -2,6 +2,10 @@ from tkinter import *
 import re
 import datetime
 import Pmw
+import time
+
+sec_now = time.time()
+now = time.localtime(sec_now)
 
 
 def start():
@@ -75,23 +79,41 @@ win.bind("<KP_Add>", lambda a: add_entry())
 
 # ==========input entry===========
 
-top_frame_input = Pmw.Counter(topRightFrame,
+top_frame_input = Pmw.Counter(rightFrame,
                               entry_font="Helvetica 20 bold",
                               entry_width=12,
                               autorepeat=True, datatype='time',
                               entryfield_validate={'validator': 'time'},
                               entryfield_value='00:00:00',
                               increment=60)
-top_frame_input.grid(column=0)
+top_frame_input.grid(columnspan=5)
 
 top_frame_input.component('entry').focus_set()
 top_frame_input.select_range(3, 5)
 top_frame_input.icursor(5)
 
+set_date = Pmw.Counter(leftFrame, labelpos='w',
+                       label_text='Shift date:',
+                       entry_width=10,
+                       entryfield_value=time.strftime('%d/%m/%Y', now),
+                       datatype = {'counter' : 'date', 'format' : 'dmy', 'yyyy' : 1})
+
+set_date.grid(row=0, column=0, stick=W)
+
+set_time = Pmw.Counter(leftFrame, labelpos='w',
+                       label_text='time:',
+                       entry_width=9,
+                       entryfield_value=time.strftime('%H:%M:%S', now),
+                       datatype = {'counter' : 'time', 'time24' : 1},
+                       increment=60)
+
+set_time.grid(row=0, column=1, stick=W)
+
 # ===========Listbox with scrollbar=================
 
 entries_list = Pmw.ScrolledListBox(leftFrame, hscrollmode='none', vscrollmode='static',
-                                   listbox_height=15, listbox_width=40)
+                                   usehullsize=1, hull_height=250, hull_width=350)
+                                   #listbox_height=15, listbox_width=40)
 '''
 entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 'static',
                             scrolledlist_hscrollmode = 'none', scrolledlist_listbox_height = 15,
@@ -101,14 +123,14 @@ entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 
                             )
 '''
 
-entries_list.grid(row=0, column=0)
+entries_list.grid(row=1, columnspan=2)
 
 # =======buttons===========
 # -------num pad-----------
 keyboard = []
 keys = "789456123C0:"
 i = 0
-for j in range(1, 5):
+for j in range(2, 6):
     for k in range(3):
         keyboard.append(Button(rightFrame, text=keys[i], font="Helvetica 15 bold", height=1, width=2))
         keyboard[i].grid(row=j, column=k, pady=2, padx=2)
@@ -117,16 +139,16 @@ for j in range(1, 5):
 
 # --------other buttons in num pad---------
 add_entry_button = Button(rightFrame, text='+', font="Helvetica 15 bold", height=6, width=7, command=add_entry)
-add_entry_button.grid(row=1, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
+add_entry_button.grid(row=2, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
 
 clear_one_button = Button(rightFrame, text="←", font="Helvetica 15 bold", height=1, width=2, command=clear_one)
-clear_one_button.grid(row=0, column=4, pady=2, padx=2)
+clear_one_button.grid(row=1, column=4, pady=2, padx=2)
 
 # ------buttons to change mode of entry-------
 select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
                               Button_font="Helvetica 15 bold", pady=2, padx=2)
 
-select_mode.grid(row=0, column=0, columnspan=4)
+select_mode.grid(row=1, column=0, columnspan=4)
 
 # Add some buttons to the horizontal RadioSelect - mode selection buttons.
 for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'blue'),
@@ -136,14 +158,15 @@ for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'bl
 select_mode.invoke(3)  # select break/rest as default
 
 # ------top left buttons-------
-top_left_buttons = Pmw.ButtonBox(topLeftFrame, Button_height=1,  # Button_width=2,
-                                 Button_font="Helvetica 15 bold", pady=1, padx=1)
+top_left_buttons = Pmw.ButtonBox(topLeftFrame, # Button_height=1,  # Button_width=2,
+                                 pady=1, padx=1,
+                                 Button_font="Helvetica 15 bold")
 
-top_left_buttons.grid(row=0, column=0, columnspan=2)
+top_left_buttons.grid(row=0, column=0, stick=W)
 
 # Add some buttons to the horizontal RadioSelect.
 top_left_buttons.add('Delete', command=lambda: current_data.delete_item())
-top_left_buttons.add('Edit')
+top_left_buttons.add('Edit', command=lambda: print(str(time.mktime(now))))
 top_left_buttons.add('Save')
 top_left_buttons.add('Clear', command=start)
 
