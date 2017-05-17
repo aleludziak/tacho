@@ -16,7 +16,13 @@ def start():
 
 
 def add_entry():
-    current_data.add()
+    current_data.add(top_frame_input.get(), select_mode.getvalue(), END)
+
+
+def set_daily_rest():
+    current_data.delete_item(0)
+
+    current_data.add(daily_rest.get(), 'R', 0)
 
 
 def clear_all():  # clear top_frame_input
@@ -50,18 +56,18 @@ win.resizable(width=FALSE, height=FALSE)
 
 Pmw.initialise(win)
 
-'''
+
 topFrame = Frame(win)
 # topFrame.pack(fill=BOTH)
 topFrame.grid(row=0, column=0, columnspan=2)
-'''
 
+'''
 topLeftFrame = Frame(win)
 topLeftFrame.grid(row=0, column=0)
 
 topRightFrame = Frame(win)
 topRightFrame.grid(row=0, column=1)
-
+'''
 leftFrame = Frame(win)
 leftFrame.grid(row=1, column=0)
 
@@ -86,28 +92,34 @@ top_frame_input = Pmw.Counter(rightFrame,
                               entryfield_validate={'validator': 'time'},
                               entryfield_value='00:00:00',
                               increment=60)
-top_frame_input.grid(columnspan=5)
+top_frame_input.grid(row=0, column=0, columnspan=5)
 
 top_frame_input.component('entry').focus_set()
 top_frame_input.select_range(3, 5)
 top_frame_input.icursor(5)
 
+'''
 set_date = Pmw.Counter(leftFrame, labelpos='w',
                        label_text='Shift date:',
                        entry_width=10,
                        entryfield_value=time.strftime('%d/%m/%Y', now),
                        datatype = {'counter' : 'date', 'format' : 'dmy', 'yyyy' : 1})
 
-set_date.grid(row=0, column=0, stick=W)
+set_date.grid(row=0, column=1, stick=W)
+'''
 
-set_time = Pmw.Counter(leftFrame, labelpos='w',
-                       label_text='time:',
-                       entry_width=9,
-                       entryfield_value=time.strftime('%H:%M:%S', now),
-                       datatype = {'counter' : 'time', 'time24' : 1},
-                       increment=60)
+daily_rest = Pmw.Counter(leftFrame, labelpos='w',
+                         label_text='Set daily rest: ',
+                         entry_width=9,
+                         entryfield_validate={'validator': 'time'},
+                         entryfield_value='11:00:00',  # time.strftime('%H:%M:%S', now),
+                         datatype = {'counter' : 'time', 'time24' : 1},
+                         increment=60)
 
-set_time.grid(row=0, column=1, stick=W)
+daily_rest.grid(row=0, column=0, stick=W, pady=1, padx=1)
+
+set_time_button = Button(leftFrame, text='Update', command=set_daily_rest)
+set_time_button.grid(row=0, column=1, pady=1, padx=1, stick=W)
 
 # ===========Listbox with scrollbar=================
 
@@ -123,7 +135,8 @@ entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 
                             )
 '''
 
-entries_list.grid(row=1, columnspan=2)
+entries_list.grid(row=1, column=0, columnspan=4)
+
 
 # =======buttons===========
 # -------num pad-----------
@@ -157,18 +170,18 @@ for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'bl
 
 select_mode.invoke(3)  # select break/rest as default
 
-# ------top left buttons-------
-top_left_buttons = Pmw.ButtonBox(topLeftFrame, # Button_height=1,  # Button_width=2,
-                                 pady=1, padx=1,
-                                 Button_font="Helvetica 15 bold")
+# ------listbox buttons-------
+listbox_buttons = Pmw.ButtonBox(leftFrame,  # Button_height=1,  # Button_width=2,
+                                # pady=1, padx=1,
+                                Button_font="Helvetica 12")
 
-top_left_buttons.grid(row=0, column=0, stick=W)
+listbox_buttons.grid(row=2, column=0, columnspan=2, stick=W)
 
 # Add some buttons to the horizontal RadioSelect.
-top_left_buttons.add('Delete', command=lambda: current_data.delete_item())
-top_left_buttons.add('Edit', command=lambda: print(str(time.mktime(now))))
-top_left_buttons.add('Save')
-top_left_buttons.add('Clear', command=start)
+listbox_buttons.add('Delete Entry', command=lambda: current_data.delete_item(entries_list.curselection()[0]))
+# listbox_buttons.add('Edit')
+# listbox_buttons.add('Save')
+listbox_buttons.add('Clear All', command=start)
 
 
 # =====bottom status=============
@@ -185,6 +198,12 @@ class Data:
 
     def __init__(self):
         self.records = []
+        if not self.records:
+
+            self.records = []
+            self.records.insert(0, Entry('R', daily_rest.get()))
+
+
 
     @staticmethod  # this let this method be called in class or outside
     def converter(sec):
@@ -197,29 +216,36 @@ class Data:
             conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
             return conversion
 
-    def add(self):
+    def add(self, user_input, mode, index):
         # Entries are added on the beginning of list. This is because I want them show up on top of the listbox.
         # I can reversed it, but then there is an issue with adding item on current position.
-        if str(top_frame_input.get()) != '00:00:00':
-            index = 0
-            entry = Entry(select_mode.getvalue(), top_frame_input.get())
-            try:
-                index = entries_list.curselection()[0]  # try get position where entry should be added
-            except IndexError:
-                pass
+        if str(user_input) != '00:00:00':
 
-            self.records.insert(index, entry)
-            top_frame_input.setentry('00:00:00')
-            top_frame_input.select_range(3, 5)  # entry field should be focus on minutes
-            top_frame_input.icursor(5)
+
+            entry = Entry(mode, user_input)
+            if index == 0:
+                self.records.insert(index, entry)
+
+            else:
+
+                try:
+                    index = entries_list.curselection()[0]  # try get position where entry should be added
+                    self.records.insert(index, entry)
+                except IndexError:
+
+                    self.records.append(entry)
+                # self.records.insert(index, entry)
+                top_frame_input.setentry('00:00:00')
+                top_frame_input.select_range(3, 5)  # entry field should be focus on minutes
+                top_frame_input.icursor(5)
 
             self.update()
 
-    def delete_item(self):
+    def delete_item(self, index):
         # delete a selected line from the listbox and from entries
         try:
             # get selected line index
-            index = entries_list.curselection()[0]
+
             entries_list.delete(index)  # delete item from listbox in GUI
             self.records.pop(index)  # delete item from data list
             self.update()
@@ -266,7 +292,7 @@ class Data:
         first_break = False
         second_break = False
 
-        for x in reversed(self.records):
+        for x in self.records:
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
 
@@ -334,8 +360,9 @@ class Data:
 
         entries_list.delete(0, END)
         line_number = len(self.records)
-        for record in self.records:
-            entries_list.insert(END, str(line_number) + ') ' + str(record))
+        for (index, record) in enumerate(self.records):
+            entries_list.insert(index, (str(index)+') '+str(record)))
+            #entries_list.insert(END, str(line_number) + ') ' + str(record))
             # color specific lines:
             if record.get_mode() == 'R':
                 entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
@@ -346,9 +373,10 @@ class Data:
             elif record.get_mode() == 'D':
                 entries_list.itemconfig(END, {'bg': 'green'}, foreground='white')
 
-            line_number -= 1
+            # line_number -= 1
 
         self.info()
+        entries_list.see(END)  # Keep focus on last item on listbox
 
     def info(self):
         status.set('Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
