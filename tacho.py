@@ -172,10 +172,12 @@ select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
 select_mode.grid(row=1, column=0, columnspan=4)
 
 # Add some buttons to the horizontal RadioSelect - mode selection buttons.
-for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'blue'),
-                                 ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'red')):
-    select_mode.add(name, text=symbol, background=background)
-    balloon.bind(select_mode, 'Choose mode: DRIVING/WORK/POA/REST')
+for name, balloon_info, symbol, background in (('D', 'Driving', u'\u2609', 'green'),
+                                               ('W', 'Work', u'\u2692', 'blue'),
+                                               ('P', 'POA', u'\u26DD', 'yellow'),
+                                               ('R', 'Rest/Break', u'\u29E6', 'red')):
+    button = select_mode.add(name, text=symbol, background=background)
+    balloon.bind(button, balloon_info)
 
 select_mode.invoke(3)  # select break/rest as default
 
@@ -318,6 +320,22 @@ class Data:
 
             return driving_remaining
 
+        elif v == 'break':
+            try:  # When first break is update firstly has to be deleted and then index error occurs
+
+                if 32400 <= self.records[0].get_value() < 39600:
+                    break_info = 'Reduced daily break'
+                    return break_info
+                elif self.records[0].get_value() < 32400:
+                    break_info ='Not enough daily break'
+                    return break_info
+                else:
+                    break_info = 'Full break taken'
+                    return break_info
+
+            except IndexError:
+                pass
+
     def daily_infringements(self):
 
         driving_time = 0  # can't be more than 4,5h before break
@@ -374,9 +392,7 @@ class Data:
 
         try:  # When first break is update firstly has to be deleted and then index error occurs
 
-            if 32400 <= self.records[0].get_value() < 39600:
-                infringements_list.append('Reduced daily break')
-            elif self.records[0].get_value() < 32400:
+            if self.records[0].get_value() < 32400:
                 infringements_list.append('Not enough daily break')
 
         except IndexError:
@@ -426,7 +442,8 @@ class Data:
         entries_list.see(END)  # Keep focus on last item on listbox
 
     def info(self):
-        status.set('Total time: ' + str(self.converter(self.sum('total')))+' / day time remaining: ' +
+        status.set(str(self.time_remaining('break'))+'\n' + '\n' +
+                   'Total day time: ' + str(self.converter(self.sum('total')))+' / time remaining: ' +
                    str(self.converter(self.time_remaining('total')))+'\n' + '\n' +
                    'Driving: '+str(self.converter(self.sum('D'))) +
                    ' / time remaining: '+str(self.converter(self.time_remaining('D')))+'\n' +
