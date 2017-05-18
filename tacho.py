@@ -107,6 +107,11 @@ set_date = Pmw.Counter(leftFrame, labelpos='w',
 
 set_date.grid(row=0, column=1, stick=W)
 '''
+dialog1 = Pmw.MessageDialog(win, title='Info', defaultbutton=0,
+                            message_text='To change daily break use update button',
+                            iconpos='w', icon_bitmap='warning')
+#dialog1.iconname('Please set daily break')
+dialog1.withdraw()
 
 balloon = Pmw.Balloon(win)
 
@@ -221,8 +226,8 @@ class Data:
             return conversion
 
     def add(self, user_input, mode, access=False):
-        # Entries are added on the beginning of list. This is because I want them show up on top of the listbox.
-        # I can reversed it, but then there is an issue with adding item on current position.
+        # Check if user trying to add first item on list,
+        # Only function set_daily_rest can do it to update first break
         if str(user_input) != '00:00:00':
 
             entry = Entry(mode, user_input)
@@ -235,7 +240,7 @@ class Data:
                 if index == 0 and access is True:
                     self.records.insert(0, entry)
                 elif index == 0 and access is False:
-                    pass
+                    dialog1.activate(geometry = 'first+100+100')
                 else:
                     self.records.insert(index, entry)
             except IndexError:
@@ -388,9 +393,12 @@ class Data:
     def update(self):
 
         entries_list.delete(0, END)
-        line_number = len(self.records)
+        #line_number = len(self.records)
         for (index, record) in enumerate(self.records):
-            entries_list.insert(index, (str(index)+') '+str(record)))
+            if index == 0:
+                entries_list.insert(index, ('DAILY/WEEKLY: '+str(record)))
+            else:
+                entries_list.insert(index, (str(index)+') '+str(record)))
             #entries_list.insert(END, str(line_number) + ') ' + str(record))
             # color specific lines:
             if record.get_mode() == 'R':
