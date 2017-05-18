@@ -292,13 +292,13 @@ class Data:
 
         if v == 'total':
 
-            for v in self.records:
+            for v in self.records[1:]:  # Do not count first break
                 total += v.get_value()
             return total
         else:  # sum for mode
 
             summary = 0
-            for x in self.records:
+            for x in self.records[1:]: # Do not count first break
                 if v == x.get_mode():
                     summary += x.get_value()
             return summary
@@ -371,6 +371,16 @@ class Data:
             infringements_list.append('TOTAL TIME OUT')
         if self.time_remaining('D') < 0:
             infringements_list.append('DRIVING TIME OUT')
+
+        try:  # When first break is update firstly has to be deleted and then index error occurs
+
+            if 32400 <= self.records[0].get_value() < 39600:
+                infringements_list.append('Reduced daily break')
+            elif self.records[0].get_value() < 32400:
+                infringements_list.append('Not enough daily break')
+
+        except IndexError:
+            pass
 
         return infringements_list
 
