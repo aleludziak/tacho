@@ -16,13 +16,13 @@ def start():
 
 
 def add_entry():
-    current_data.add(top_frame_input.get(), select_mode.getvalue(), END)
+    current_data.add(top_frame_input.get(), select_mode.getvalue())
 
 
 def set_daily_rest():
-    current_data.delete_item(0)
+    current_data.delete_item(True)
 
-    current_data.add(daily_rest.get(), 'R', 0)
+    current_data.add(daily_rest.get(), 'R', True)
 
 
 def clear_all():  # clear top_frame_input
@@ -108,6 +108,8 @@ set_date = Pmw.Counter(leftFrame, labelpos='w',
 set_date.grid(row=0, column=1, stick=W)
 '''
 
+balloon = Pmw.Balloon(win)
+
 daily_rest = Pmw.Counter(leftFrame, labelpos='w',
                          label_text='Set daily rest: ',
                          entry_width=9,
@@ -120,6 +122,7 @@ daily_rest.grid(row=0, column=0, stick=W, pady=1, padx=1)
 
 set_time_button = Button(leftFrame, text='Update', command=set_daily_rest)
 set_time_button.grid(row=0, column=1, pady=1, padx=1, stick=W)
+balloon.bind(set_time_button, 'Update daily rest')
 
 # ===========Listbox with scrollbar=================
 
@@ -167,6 +170,7 @@ select_mode.grid(row=1, column=0, columnspan=4)
 for name, symbol, background in (('D', u'\u2609', 'green'), ('W', u'\u2692', 'blue'),
                                  ('P', u'\u26DD', 'yellow'), ('R', u'\u29E6', 'red')):
     select_mode.add(name, text=symbol, background=background)
+    balloon.bind(select_mode, 'Choose mode: DRIVING/WORK/POA/REST')
 
 select_mode.invoke(3)  # select break/rest as default
 
@@ -178,7 +182,7 @@ listbox_buttons = Pmw.ButtonBox(leftFrame,  # Button_height=1,  # Button_width=2
 listbox_buttons.grid(row=2, column=0, columnspan=2, stick=W)
 
 # Add some buttons to the horizontal RadioSelect.
-listbox_buttons.add('Delete Entry', command=lambda: current_data.delete_item(entries_list.curselection()[0]))
+listbox_buttons.add('Delete Entry', command=lambda: current_data.delete_item())
 # listbox_buttons.add('Edit')
 # listbox_buttons.add('Save')
 listbox_buttons.add('Clear All', command=start)
@@ -216,42 +220,67 @@ class Data:
             conversion = '%d:%02d:%02d' % (sec / 3600, sec / 60 % 60, sec % 60)  # convert to HH:MM:SS
             return conversion
 
-    def add(self, user_input, mode, index):
+    def add(self, user_input, mode, access=False):
         # Entries are added on the beginning of list. This is because I want them show up on top of the listbox.
         # I can reversed it, but then there is an issue with adding item on current position.
         if str(user_input) != '00:00:00':
 
-
             entry = Entry(mode, user_input)
-            if index == 0:
-                self.records.insert(index, entry)
 
-            else:
 
-                try:
-                    index = entries_list.curselection()[0]  # try get position where entry should be added
+
+
+            try:
+                index = entries_list.curselection()[0]  # try get position where entry should be added
+                if index == 0 and access is True:
+                    self.records.insert(0, entry)
+                elif index == 0 and access is False:
+                    pass
+                else:
                     self.records.insert(index, entry)
-                except IndexError:
-
+            except IndexError:
+                if access is True:
+                    self.records.insert(0, entry)
+                else:
                     self.records.append(entry)
-                # self.records.insert(index, entry)
-                top_frame_input.setentry('00:00:00')
-                top_frame_input.select_range(3, 5)  # entry field should be focus on minutes
-                top_frame_input.icursor(5)
+
+            # self.records.insert(index, entry)
+            top_frame_input.setentry('00:00:00')
+            top_frame_input.select_range(3, 5)  # entry field should be focus on minutes
+            top_frame_input.icursor(5)
 
             self.update()
 
-    def delete_item(self, index):
+    def delete_item(self, access=False):
         # delete a selected line from the listbox and from entries
+        # Check if user trying to delete first item on list,
+        # Only function set_daily_rest can do it to update first break
+
         try:
             # get selected line index
+            index = entries_list.curselection()[0]
+            if index == 0 and access is True:
 
-            entries_list.delete(index)  # delete item from listbox in GUI
-            self.records.pop(index)  # delete item from data list
-            self.update()
+                entries_list.delete(0)  # delete item from listbox in GUI
+                self.records.pop(0)  # delete item from data list
+                self.update()
+            elif index == 0 and access is False:
+                pass
+            else:
+
+
+                entries_list.delete(index)  # delete item from listbox in GUI
+                self.records.pop(index)  # delete item from data list
+                self.update()
 
         except IndexError:
-            pass
+            if access is True:
+                entries_list.delete(0)  # delete item from listbox in GUI
+                self.records.pop(0)  # delete item from data list
+                self.update()
+            else:
+                pass
+
 
     def sum(self, v):
         total = 0
