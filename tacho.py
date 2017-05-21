@@ -2,10 +2,10 @@ from tkinter import *
 import re
 import datetime
 import Pmw
-import time
+# import time
 
-sec_now = time.time()
-now = time.localtime(sec_now)
+# sec_now = time.time()
+# now = time.localtime(sec_now)
 
 
 def start():
@@ -209,12 +209,13 @@ class Data:
 
     def __init__(self):
         self.records = []
+        self.driving_time = 36000  # 10h
+        self.reduced_break = False
+
         if not self.records:
 
             self.records = []
             self.records.insert(0, Entry('R', daily_rest.get()))
-
-
 
     @staticmethod  # this let this method be called in class or outside
     def converter(sec):
@@ -233,9 +234,6 @@ class Data:
         if str(user_input) != '00:00:00':
 
             entry = Entry(mode, user_input)
-
-
-
 
             try:
                 index = entries_list.curselection()[0]  # try get position where entry should be added
@@ -275,7 +273,6 @@ class Data:
                 pass
             else:
 
-
                 entries_list.delete(index)  # delete item from listbox in GUI
                 self.records.pop(index)  # delete item from data list
                 self.update()
@@ -287,7 +284,6 @@ class Data:
                 self.update()
             else:
                 pass
-
 
     def sum(self, v):
         total = 0
@@ -315,7 +311,7 @@ class Data:
 
         # remaining time for modes
         elif v == 'D':
-            driving_remaining = 36000  # 10h
+            driving_remaining = self.driving_time
             driving_remaining -= self.sum('D')
 
             return driving_remaining
@@ -325,9 +321,10 @@ class Data:
 
                 if 32400 <= self.records[0].get_value() < 39600:
                     break_info = 'Reduced daily break'
+                    self.reduced_break = True
                     return break_info
                 elif self.records[0].get_value() < 32400:
-                    break_info ='Not enough daily break'
+                    break_info = 'Not enough daily break'
                     return break_info
                 else:
                     break_info = 'Full break taken'
@@ -340,11 +337,12 @@ class Data:
 
         driving_time = 0  # can't be more than 4,5h before break
         working_time = 0  # it's time of work or driving and can't be more than 6h
-        infringements_list = []
+
         first_break = False
         second_break = False
-
+        infringements_list = []
         for x in self.records:
+
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
 
@@ -419,16 +417,20 @@ class Data:
     def update(self):
 
         entries_list.delete(0, END)
-        #line_number = len(self.records)
+        # line_number = len(self.records)
         for (index, record) in enumerate(self.records):
             if index == 0:
-                entries_list.insert(index, ('DAILY/WEEKLY: '+str(record)))
+                entries_list.insert(index, ('DAILY/WEEKLY REST: '+str(record)[:-11]))
+
             else:
                 entries_list.insert(index, (str(index)+') '+str(record)))
-            #entries_list.insert(END, str(line_number) + ') ' + str(record))
+            # entries_list.insert(END, str(line_number) + ') ' + str(record))
             # color specific lines:
             if record.get_mode() == 'R':
-                entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
+                if index == 0:
+                    entries_list.itemconfig(END, {'bg': 'white'}, foreground='black')
+                else:
+                    entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
             elif record.get_mode() == 'P':
                 entries_list.itemconfig(END, {'bg': 'yellow'})
             elif record.get_mode() == 'W':
