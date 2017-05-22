@@ -7,7 +7,6 @@ import Pmw
 # sec_now = time.time()
 # now = time.localtime(sec_now)
 
-
 def start():
     global current_data
     current_data = Data()
@@ -340,7 +339,7 @@ class Data:
 
         first_break = False
         second_break = False
-        infringements_list = []
+        daily_infringements_list = []
         for x in self.records:
 
             if x.get_mode() == 'D':
@@ -363,40 +362,40 @@ class Data:
                 if driving_time > 16200:
 
                     info = "Break after 4,5h driving needed"
-                    infringements_list.append(info)
+                    daily_infringements_list.append(info)
                 driving_time = 0
 
                 if working_time > 21600:
                     info_break = "Break after 6h work needed"
-                    infringements_list.append(info_break)
+                    daily_infringements_list.append(info_break)
                 working_time = 0
                 first_break = False
                 second_break = False
 
             if driving_time > 16200:
                 info = "Break after 4,5h driving needed"
-                infringements_list.append(info)
+                daily_infringements_list.append(info)
                 driving_time = 0
 
             if working_time > 21600:
                 info_break = "Break after 6h work needed"
-                infringements_list.append(info_break)
+                daily_infringements_list.append(info_break)
                 working_time = 0
 
         if self.time_remaining('total') < 0:
-            infringements_list.append('TOTAL TIME OUT')
+            daily_infringements_list.append('TOTAL TIME OUT')
         if self.time_remaining('D') < 0:
-            infringements_list.append('DRIVING TIME OUT')
+            daily_infringements_list.append('DRIVING TIME OUT')
 
         try:  # When first break is update firstly has to be deleted and then index error occurs
 
             if self.records[0].get_value() < 32400:
-                infringements_list.append('Not enough daily break')
+                daily_infringements_list.append('Not enough daily break')
 
         except IndexError:
             pass
 
-        return infringements_list
+        return daily_infringements_list
 
     def lineup_infringements(self, items_list):
         # Takes list of infringements and change it to readable string
@@ -417,28 +416,24 @@ class Data:
     def update(self):
 
         entries_list.delete(0, END)
-        # line_number = len(self.records)
-        for (index, record) in enumerate(self.records):
-            if index == 0:
-                entries_list.insert(index, ('DAILY/WEEKLY REST: '+str(record)[:-11]))
 
-            else:
-                entries_list.insert(index, (str(index)+') '+str(record)))
-            # entries_list.insert(END, str(line_number) + ') ' + str(record))
-            # color specific lines:
+        for (index, record) in enumerate(self.records):
+
             if record.get_mode() == 'R':
-                if index == 0:
+                if record.get_value() >= 32400:
+                    entries_list.insert(index, ('DAILY/WEEKLY REST: '+str(record)[:-11]))
                     entries_list.itemconfig(END, {'bg': 'white'}, foreground='black')
                 else:
+                    entries_list.insert(index, (str(index)+') '+str(record)))
                     entries_list.itemconfig(END, {'bg': 'red'}, foreground='white')
-            elif record.get_mode() == 'P':
-                entries_list.itemconfig(END, {'bg': 'yellow'})
-            elif record.get_mode() == 'W':
-                entries_list.itemconfig(END, {'bg': 'blue'}, foreground='white')
-            elif record.get_mode() == 'D':
-                entries_list.itemconfig(END, {'bg': 'green'}, foreground='white')
-
-            # line_number -= 1
+            else:
+                entries_list.insert(index, (str(index)+') '+str(record)))
+                if record.get_mode() == 'P':
+                    entries_list.itemconfig(END, {'bg': 'yellow'})
+                if record.get_mode() == 'W':
+                    entries_list.itemconfig(END, {'bg': 'blue'}, foreground='white')
+                if record.get_mode() == 'D':
+                    entries_list.itemconfig(END, {'bg': 'green'}, foreground='white')
 
         self.info()
         entries_list.see(END)  # Keep focus on last item on listbox
