@@ -208,7 +208,7 @@ class Data:
 
     def __init__(self):
         self.records = []
-        self.driving_time = 36000  # 10h
+
         self.reduced_break = False
 
         if not self.records:
@@ -289,33 +289,63 @@ class Data:
 
         if v == 'total':
 
-            for v in self.records[1:]:  # Do not count first break
-                total += v.get_value()
+            for x in self.records: #[1:]:  # Do not count first break
+                if x.get_mode() == 'R' and x.get_value() >= 32400:
+                    total = 0
+                else:
+                    total += x.get_value()
             return total
         else:  # sum for mode
 
             summary = 0
-            for x in self.records[1:]: # Do not count first break
+            for x in self.records: #[1:]: # Do not count first break
                 if v == x.get_mode():
+
                     summary += x.get_value()
+                if x.get_mode() == 'R' and x.get_value() >= 32400:
+                    summary = 0
+
             return summary
 
     def time_remaining(self, v):
+        total_remaining = 54000  # 15h = 54000 seconds
+        driving_remaining = 36000  # 10h
 
         if v == 'total':
-            total_remaining = 54000  # 15h = 54000 seconds
+
             total_remaining -= self.sum('total')
 
             return total_remaining
 
         # remaining time for modes
         elif v == 'D':
-            driving_remaining = self.driving_time
             driving_remaining -= self.sum('D')
 
             return driving_remaining
 
         elif v == 'break':
+
+            time = 0
+            for x in self.records:
+
+                if x.get_mode() == 'R' and x.get_value() >= 32400:  # >=9h
+                    # sum time of entries bigger than 13 h or daily break less than 11h
+                    if time > 46800 or (x.get_mode() == 'R' and 32400 <= x.get_value() < 39600):
+                        break_info = 'Reduced daily break'
+
+
+                    else:
+                        break_info = 'Full break taken'
+
+                    time = 0
+                    total_remaining = 54000
+
+
+                else:
+                    time += x.get_value()
+            return break_info
+
+            '''
             try:  # When first break is update firstly has to be deleted and then index error occurs
 
                 if 32400 <= self.records[0].get_value() < 39600:
@@ -331,6 +361,7 @@ class Data:
 
             except IndexError:
                 pass
+            '''
 
     def daily_infringements(self):
 
