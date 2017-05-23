@@ -7,21 +7,23 @@ import Pmw
 # sec_now = time.time()
 # now = time.localtime(sec_now)
 
+
 def start():
     global current_data
     current_data = Data()
     current_data.update()
-    current_data.info()
+    # current_data.info()
 
 
 def add_entry():
     current_data.add(top_frame_input.get(), select_mode.getvalue())
 
-
+'''
 def set_daily_rest():
     current_data.delete_item(True)
 
     current_data.add(daily_rest.get(), 'R', True)
+'''
 
 
 def clear_all():  # clear top_frame_input
@@ -113,7 +115,7 @@ dialog1 = Pmw.MessageDialog(win, title='Info', defaultbutton=0,
 dialog1.withdraw()
 
 balloon = Pmw.Balloon(win)
-
+'''
 daily_rest = Pmw.Counter(leftFrame, labelpos='w',
                          label_text='Set daily rest: ',
                          entry_width=9,
@@ -123,11 +125,12 @@ daily_rest = Pmw.Counter(leftFrame, labelpos='w',
                          increment=60)
 
 daily_rest.grid(row=0, column=0, stick=W, pady=1, padx=1)
-
+'''
+'''
 set_time_button = Button(leftFrame, text='Update', command=set_daily_rest)
 set_time_button.grid(row=0, column=1, pady=1, padx=1, stick=W)
 balloon.bind(set_time_button, 'Update daily rest')
-
+'''
 # ===========Listbox with scrollbar=================
 
 entries_list = Pmw.ScrolledListBox(leftFrame, hscrollmode='none', vscrollmode='static',
@@ -142,7 +145,7 @@ entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 
                             )
 '''
 
-entries_list.grid(row=1, column=0, columnspan=4)
+entries_list.grid(row=0, column=0, columnspan=4)
 
 
 # =======buttons===========
@@ -214,7 +217,7 @@ class Data:
         if not self.records:
 
             self.records = []
-            self.records.insert(0, Entry('R', daily_rest.get()))
+            self.records.insert(0, Entry('R', '678:00:00'))
 
     @staticmethod  # this let this method be called in class or outside
     def converter(sec):
@@ -239,7 +242,7 @@ class Data:
                 if index == 0 and access is True:
                     self.records.insert(0, entry)
                 elif index == 0 and access is False:
-                    dialog1.activate(geometry = 'first+100+100')
+                    pass  # dialog1.activate(geometry = 'first+100+100')
                 else:
                     self.records.insert(index, entry)
             except IndexError:
@@ -289,7 +292,7 @@ class Data:
 
         if v == 'total':
 
-            for x in self.records: #[1:]:  # Do not count first break
+            for x in self.records:
                 if x.get_mode() == 'R' and x.get_value() >= 32400:
                     total = 0
                 else:
@@ -298,7 +301,7 @@ class Data:
         else:  # sum for mode
 
             summary = 0
-            for x in self.records: #[1:]: # Do not count first break
+            for x in self.records:
                 if v == x.get_mode():
 
                     summary += x.get_value()
@@ -330,51 +333,42 @@ class Data:
 
                 if x.get_mode() == 'R' and x.get_value() >= 32400:  # >=9h
                     # sum time of entries bigger than 13 h or daily break less than 11h
-                    if time > 46800 or (x.get_mode() == 'R' and 32400 <= x.get_value() < 39600):
+                    if (time > 46800 and x.get_value() < 86400) or 32400 <= x.get_value() < 39600:
                         break_info = 'Reduced daily break'
 
-
+                    elif 39600 <= x.get_value() < 86400:
+                        break_info = 'Full daily break taken'
+                    elif 86400 <= x.get_value() < 162000 :  # between 24h and 45h
+                        break_info = 'Reduced weekly rest'
                     else:
-                        break_info = 'Full break taken'
+                        break_info = 'Full weekly rest taken'
 
                     time = 0
-                    total_remaining = 54000
+
 
 
                 else:
                     time += x.get_value()
             return break_info
 
-            '''
-            try:  # When first break is update firstly has to be deleted and then index error occurs
-
-                if 32400 <= self.records[0].get_value() < 39600:
-                    break_info = 'Reduced daily break'
-                    self.reduced_break = True
-                    return break_info
-                elif self.records[0].get_value() < 32400:
-                    break_info = 'Not enough daily break'
-                    return break_info
-                else:
-                    break_info = 'Full break taken'
-                    return break_info
-
-            except IndexError:
-                pass
-            '''
-
     def daily_infringements(self):
 
         driving_time = 0  # can't be more than 4,5h before break
         working_time = 0  # it's time of work or driving and can't be more than 6h
+        daily_driving_time = 36000  # 10h
+        daily_total_time = 54000  # 15h
+        weekly_total_time = 604800  # 7x24h
 
         first_break = False
         second_break = False
         daily_infringements_list = []
         for x in self.records:
+            daily_total_time -= x.get_value()
+            weekly_total_time -= x.get_value()
 
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
+                daily_driving_time -= x.get_value()
 
             if x.get_mode() == 'D' or x.get_mode() == 'W':
                 working_time += x.get_value()
@@ -390,6 +384,7 @@ class Data:
                     first_break = True
 
             if (x.get_mode() == 'R' and x.get_value() >= 2700) or (second_break is True):
+                '''
                 if driving_time > 16200:
 
                     info = "Break after 4,5h driving needed"
@@ -399,13 +394,20 @@ class Data:
                 if working_time > 21600:
                     info_break = "Break after 6h work needed"
                     daily_infringements_list.append(info_break)
+                '''
                 working_time = 0
                 first_break = False
                 second_break = False
 
+                if x.get_value() >= 32400:
+                    daily_total_time = 54000
+                    daily_driving_time = 36000
+                    if x.get_value() >= 86400:  # 24h
+                        weekly_total_time = 604800
+
             if driving_time > 16200:
-                info = "Break after 4,5h driving needed"
-                daily_infringements_list.append(info)
+                info_driving_break = "Break after 4,5h driving needed"
+                daily_infringements_list.append(info_driving_break)
                 driving_time = 0
 
             if working_time > 21600:
@@ -413,11 +415,26 @@ class Data:
                 daily_infringements_list.append(info_break)
                 working_time = 0
 
+            if daily_total_time < 0:
+                daily_infringements_list.append('Available daily shift time exceeded')
+                daily_total_time = 54000
+
+            if daily_driving_time < 0:
+                daily_infringements_list.append('Available daily driving time exceeded')
+                daily_driving_time = 36000
+
+            if weekly_total_time < 0:
+                daily_infringements_list.append('Available weekly total time of work exceeded')
+                weekly_total_time = 604800
+
+
+
+        '''
         if self.time_remaining('total') < 0:
             daily_infringements_list.append('TOTAL TIME OUT')
         if self.time_remaining('D') < 0:
             daily_infringements_list.append('DRIVING TIME OUT')
-
+        '''
         try:  # When first break is update firstly has to be deleted and then index error occurs
 
             if self.records[0].get_value() < 32400:
@@ -431,8 +448,8 @@ class Data:
     def lineup_infringements(self, items_list):
         # Takes list of infringements and change it to readable string
         if not items_list:
-            info = 'No infringements found'
-            return info
+            info_infringements = 'No infringements found'
+            return info_infringements
         else:
             all_infringements = ''
             for x in set(items_list):
@@ -441,16 +458,18 @@ class Data:
 
                 else:
                     all_infringements += "{0}: {1}\n".format(x, items_list.count(x))
-            info = "Infringements:\n"+all_infringements
-            return info
+            info_infringements = "Infringements:\n"+all_infringements
+            return info_infringements
 
     def update(self):
 
         entries_list.delete(0, END)
 
         for (index, record) in enumerate(self.records):
+            if index == 0:
+                entries_list.insert(index, 'List of Entries:')
 
-            if record.get_mode() == 'R':
+            elif record.get_mode() == 'R':
                 if record.get_value() >= 32400:
                     entries_list.insert(index, ('DAILY/WEEKLY REST: '+str(record)[:-11]))
                     entries_list.itemconfig(END, {'bg': 'white'}, foreground='black')
