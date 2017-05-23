@@ -356,9 +356,16 @@ class Data:
         driving_time = 0  # can't be more than 4,5h before break
         working_time = 0  # it's time of work or driving and can't be more than 6h
         daily_driving_time = 36000  # 10h
+        count = {'exceeded_daily_driving': 0, 'reduced_daily_rest': 0}
         daily_total_time = 54000  # 15h
-        weekly_total_time = 604800  # 7x24h
+        weekly_total_time = 518400  # 6x24h
+        weekly_driving_time = 201600  # 56h
 
+        fortnight_driving_time = 324000  # 90h
+        fortnight = False
+
+
+        reduced_weekly_rest = False
         first_break = False
         second_break = False
         daily_infringements_list = []
@@ -366,10 +373,17 @@ class Data:
             daily_total_time -= x.get_value()
             weekly_total_time -= x.get_value()
 
+
+            # driving
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
                 daily_driving_time -= x.get_value()
+                if daily_driving_time < 3600:  # less than 1h so more than 9h driving
+                    count['exceeded_daily_driving'] += 1
+                weekly_driving_time -= x.get_value()
+                fortnight_driving_time -= x.get_value()
 
+            # driving or work
             if x.get_mode() == 'D' or x.get_mode() == 'W':
                 working_time += x.get_value()
 
@@ -383,6 +397,7 @@ class Data:
                 else:
                     first_break = True
 
+            # break 45 minutes or more (also can be split to 15min and 30min)
             if (x.get_mode() == 'R' and x.get_value() >= 2700) or (second_break is True):
                 '''
                 if driving_time > 16200:
@@ -395,15 +410,56 @@ class Data:
                     info_break = "Break after 6h work needed"
                     daily_infringements_list.append(info_break)
                 '''
+                driving_time = 0
                 working_time = 0
                 first_break = False
                 second_break = False
 
-                if x.get_value() >= 32400:
+                if x.get_value() >= 32400:  # >=9h
+                    daily_total_time += x.get_value()  # do not count last break for daily_total_time
+
+                    # reduced daily break - more than 13h of work or rest between 9h and 11h
+                    if (daily_total_time < 7200 and x.get_value() < 86400) or 32400 <= x.get_value() < 39600:
+
+                        count['reduced_daily_rest'] += 1
+
+                    # full daily break between 11h and 24h
+                    elif 39600 <= x.get_value() < 86400:
+                        pass
+                    # reduced weekly break between 24h and 45h
+                    elif 86400 <= x.get_value() < 162000 :  # between 24h and 45h
+
+                        if reduced_weekly_rest is True:
+
+                        # you can't take two reduced one after another,
+                        # but you can skip day at work during week - it must be fixed
+
+                            # daily_infringements_list.append("Second reduced weekly break taken")
+                            reduced_weekly_rest = False
+                        else:
+                            reduced_weekly_rest = True
+
+                        weekly_total_time = 518400
+                        weekly_driving_time = 201600
+
+                        if fortnight is False:
+                            fortnight = True
+                        else:
+                            fortnight_driving_time = 324000
+
+                        count['exceeded_daily_driving'] = 0
+                        count['reduced_daily_rest'] = 0
+
+                    # full weekly rest more than 45h
+                    elif x.get_value() >= 162000:  # 45h
+                        reduced_weekly_rest = False
+                        weekly_total_time = 518400
+                        weekly_driving_time = 201600
+
                     daily_total_time = 54000
                     daily_driving_time = 36000
-                    if x.get_value() >= 86400:  # 24h
-                        weekly_total_time = 604800
+
+
 
             if driving_time > 16200:
                 info_driving_break = "Break after 4,5h driving needed"
@@ -425,8 +481,22 @@ class Data:
 
             if weekly_total_time < 0:
                 daily_infringements_list.append('Available weekly total time of work exceeded')
-                weekly_total_time = 604800
+                weekly_total_time = 518400
 
+            if weekly_driving_time < 0:
+                daily_infringements_list.append('Available weekly total driving time exceeded')
+                weekly_driving_time = 201600
+
+            if fortnight_driving_time < 0:
+                daily_infringements_list.append('Fortnight total driving time exceeded')
+                fortnight_driving_time = 324000
+
+            # if more than two times between two weekly rests driving time is more than 9h
+            if count['exceeded_daily_driving'] > 2:
+                daily_infringements_list.append('Exceeded daily driving time already used')
+
+            if count['reduced_daily_rest'] > 3:
+                daily_infringements_list.append('Too many reduced daily breaks between 2 weekly rest periods')
 
 
         '''
