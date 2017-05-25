@@ -72,11 +72,14 @@ topRightFrame.grid(row=0, column=1)
 leftFrame = Frame(win)
 leftFrame.grid(row=1, column=0)
 
+middleFrame = Frame(win)
+middleFrame.grid(row=1, column=1)
+
 rightFrame = Frame(win)
-rightFrame.grid(row=1, column=1)
+rightFrame.grid(row=1, column=2)
 
 bottomFrame = Frame(win)
-bottomFrame.grid(row=2, columnspan=2)
+bottomFrame.grid(row=2, columnspan=3)
 
 # -------keys actions-----
 win.bind("<Return>", lambda a: add_entry())
@@ -86,7 +89,7 @@ win.bind("<KP_Add>", lambda a: add_entry())
 
 # ==========input entry===========
 
-top_frame_input = Pmw.Counter(rightFrame,
+top_frame_input = Pmw.Counter(middleFrame,
                               entry_font="Helvetica 20 bold",
                               entry_width=12,
                               autorepeat=True, datatype='time',
@@ -155,20 +158,20 @@ keys = "789456123C0:"
 i = 0
 for j in range(2, 6):
     for k in range(3):
-        keyboard.append(Button(rightFrame, text=keys[i], font="Helvetica 15 bold", height=1, width=2))
+        keyboard.append(Button(middleFrame, text=keys[i], font="Helvetica 15 bold", height=1, width=2))
         keyboard[i].grid(row=j, column=k, pady=2, padx=2)
         keyboard[i]["command"] = lambda x=keys[i]: num_press(x)
         i += 1
 
 # --------other buttons in num pad---------
-add_entry_button = Button(rightFrame, text='+', font="Helvetica 15 bold", height=6, width=7, command=add_entry)
+add_entry_button = Button(middleFrame, text='+', font="Helvetica 15 bold", height=6, width=7, command=add_entry)
 add_entry_button.grid(row=2, column=3, rowspan=4, columnspan=2, pady=2, padx=2)
 
-clear_one_button = Button(rightFrame, text="←", font="Helvetica 15 bold", height=1, width=2, command=clear_one)
+clear_one_button = Button(middleFrame, text="←", font="Helvetica 15 bold", height=1, width=2, command=clear_one)
 clear_one_button.grid(row=1, column=4, pady=2, padx=2)
 
 # ------buttons to change mode of entry-------
-select_mode = Pmw.RadioSelect(rightFrame, Button_height=1, Button_width=2,
+select_mode = Pmw.RadioSelect(middleFrame, Button_height=1, Button_width=2,
                               Button_font="Helvetica 15 bold", pady=2, padx=2)
 
 select_mode.grid(row=1, column=0, columnspan=4)
@@ -198,13 +201,19 @@ listbox_buttons.add('Clear All', command=start)
 
 
 # =====bottom status=============
-status = StringVar()
-bottom_status_total = Label(bottomFrame, textvariable=status, bd=1, relief=SUNKEN,
-                            font="Helvetica 15 bold", width=54)
-status.set("")
-bottom_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
+right_status_info = StringVar()
+right_status_total = Label(rightFrame, textvariable=right_status_info, bd=1, relief=SUNKEN,
+                           font="Helvetica 15 bold", width=42, height=11)
+right_status_info.set("")
+right_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
-# ============================================
+# ====infringements status on right=================
+bottom_infringements_status = StringVar()
+
+infringements_status = Label(bottomFrame, textvariable=bottom_infringements_status, bd=1, relief=SUNKEN,
+                             font="Helvetica 15 bold", width=100)
+bottom_infringements_status.set("")
+infringements_status.pack(fill=BOTH, expand=True, side=TOP, ipady=10, ipadx=10)
 
 
 class Data:
@@ -314,6 +323,13 @@ class Data:
         total_remaining = 54000  # 15h = 54000 seconds
         driving_remaining = 36000  # 10h
 
+        # This doesn't work very well yet!!!
+        if count['exceeded_daily_driving'] >= 2:
+            driving_remaining = 32400  # 9h
+
+        if count['reduced_daily_rest'] >= 3:
+            total_remaining = 46800  # 13h
+
         if v == 'total':
 
             total_remaining -= self.sum('total')
@@ -351,7 +367,8 @@ class Data:
                     time += x.get_value()
             return break_info
 
-    def daily_infringements(self):
+    def infringements(self):
+        global weekly_total_time_info, fortnight_driving_time_info, infringements_list, count
 
         driving_time = 0  # can't be more than 4,5h before break
         working_time = 0  # it's time of work or driving and can't be more than 6h
@@ -362,17 +379,15 @@ class Data:
         weekly_driving_time = 201600  # 56h
 
         fortnight_driving_time = 324000  # 90h
-        fortnight = False
-
+        fortnight = True  # because first item on records is break
 
         reduced_weekly_rest = False
         first_break = False
         second_break = False
-        daily_infringements_list = []
+        infringements_list = []
         for x in self.records:
             daily_total_time -= x.get_value()
             weekly_total_time -= x.get_value()
-
 
             # driving
             if x.get_mode() == 'D':
@@ -403,12 +418,12 @@ class Data:
                 if driving_time > 16200:
 
                     info = "Break after 4,5h driving needed"
-                    daily_infringements_list.append(info)
+                    infringements_list.append(info)
                 driving_time = 0
 
                 if working_time > 21600:
                     info_break = "Break after 6h work needed"
-                    daily_infringements_list.append(info_break)
+                    infringements_list.append(info_break)
                 '''
                 driving_time = 0
                 working_time = 0
@@ -426,15 +441,15 @@ class Data:
                     # full daily break between 11h and 24h
                     elif 39600 <= x.get_value() < 86400:
                         pass
-                    # reduced weekly break between 24h and 45h
-                    elif 86400 <= x.get_value() < 162000 :  # between 24h and 45h
+                    # weekly break between 24h and 45h
+                    elif x.get_value() >= 86400 :  # more than 24h
 
                         if reduced_weekly_rest is True:
 
-                        # you can't take two reduced one after another,
+                        # you can't take two reduced rests one after another,
                         # but you can skip day at work during week - it must be fixed
 
-                            # daily_infringements_list.append("Second reduced weekly break taken")
+                            # infringements_list.append("Second reduced weekly break taken")
                             reduced_weekly_rest = False
                         else:
                             reduced_weekly_rest = True
@@ -444,76 +459,79 @@ class Data:
 
                         if fortnight is False:
                             fortnight = True
+
                         else:
                             fortnight_driving_time = 324000
+                            fortnight = False
 
                         count['exceeded_daily_driving'] = 0
                         count['reduced_daily_rest'] = 0
 
                     # full weekly rest more than 45h
-                    elif x.get_value() >= 162000:  # 45h
-                        reduced_weekly_rest = False
-                        weekly_total_time = 518400
-                        weekly_driving_time = 201600
+                        if x.get_value() >= 162000:  # more than 45h
+                            reduced_weekly_rest = False
 
                     daily_total_time = 54000
                     daily_driving_time = 36000
 
-
-
             if driving_time > 16200:
                 info_driving_break = "Break after 4,5h driving needed"
-                daily_infringements_list.append(info_driving_break)
+                infringements_list.append(info_driving_break)
                 driving_time = 0
 
             if working_time > 21600:
                 info_break = "Break after 6h work needed"
-                daily_infringements_list.append(info_break)
+                infringements_list.append(info_break)
                 working_time = 0
 
             if daily_total_time < 0:
-                daily_infringements_list.append('Available daily shift time exceeded')
+                infringements_list.append('Available daily shift time exceeded')
                 daily_total_time = 54000
 
             if daily_driving_time < 0:
-                daily_infringements_list.append('Available daily driving time exceeded')
+                infringements_list.append('Available daily driving time exceeded')
                 daily_driving_time = 36000
 
             if weekly_total_time < 0:
-                daily_infringements_list.append('Available weekly total time of work exceeded')
+                infringements_list.append('Available weekly total time of work exceeded')
                 weekly_total_time = 518400
 
             if weekly_driving_time < 0:
-                daily_infringements_list.append('Available weekly total driving time exceeded')
+                infringements_list.append('Available weekly total driving time exceeded')
                 weekly_driving_time = 201600
 
             if fortnight_driving_time < 0:
-                daily_infringements_list.append('Fortnight total driving time exceeded')
+                infringements_list.append('Fortnight total driving time exceeded')
                 fortnight_driving_time = 324000
 
             # if more than two times between two weekly rests driving time is more than 9h
             if count['exceeded_daily_driving'] > 2:
-                daily_infringements_list.append('Exceeded daily driving time already used')
+                infringements_list.append('Exceeded daily driving time already used')
+                count['exceeded_daily_driving'] = 0
 
             if count['reduced_daily_rest'] > 3:
-                daily_infringements_list.append('Too many reduced daily breaks between 2 weekly rest periods')
+                infringements_list.append('Too many reduced daily breaks between 2 weekly rest periods')
+                count['reduced_daily_rest'] = 0
+
 
 
         '''
         if self.time_remaining('total') < 0:
-            daily_infringements_list.append('TOTAL TIME OUT')
+            infringements_list.append('TOTAL TIME OUT')
         if self.time_remaining('D') < 0:
-            daily_infringements_list.append('DRIVING TIME OUT')
-        '''
+            infringements_list.append('DRIVING TIME OUT')
+
         try:  # When first break is update firstly has to be deleted and then index error occurs
 
             if self.records[0].get_value() < 32400:
-                daily_infringements_list.append('Not enough daily break')
+                infringements_list.append('Not enough daily break')
 
         except IndexError:
             pass
-
-        return daily_infringements_list
+        '''
+        fortnight_driving_time_info = str(self.converter(fortnight_driving_time))
+        weekly_total_time_info = str(self.converter(weekly_total_time))
+        # return infringements_list
 
     def lineup_infringements(self, items_list):
         # Takes list of infringements and change it to readable string
@@ -532,7 +550,7 @@ class Data:
             return info_infringements
 
     def update(self):
-
+        self.infringements()
         entries_list.delete(0, END)
 
         for (index, record) in enumerate(self.records):
@@ -559,16 +577,23 @@ class Data:
         entries_list.see(END)  # Keep focus on last item on listbox
 
     def info(self):
-        status.set(str(self.time_remaining('break'))+'\n' + '\n' +
-                   'Total day time: ' + str(self.converter(self.sum('total')))+' / time remaining: ' +
-                   str(self.converter(self.time_remaining('total')))+'\n' + '\n' +
-                   'Driving: '+str(self.converter(self.sum('D'))) +
-                   ' / time remaining: '+str(self.converter(self.time_remaining('D')))+'\n' +
-                   'Work: '+str(self.converter(self.sum('W')))+' | ' +
-                   'POA: '+str(self.converter(self.sum('P')))+' | ' +
-                   'Rest: '+str(self.converter(self.sum('R')))+'\n' + '\n' +
-                   self.lineup_infringements(self.daily_infringements())
-                   )
+        right_status_info.set(str(self.time_remaining('break')) + '\n' + '\n' +
+                              'Total day time: ' + str(self.converter(self.sum('total'))) + ' / time remaining: ' +
+                              str(self.converter(self.time_remaining('total'))) + '\n' + '\n' +
+                              'Driving: ' + str(self.converter(self.sum('D'))) +
+                              ' / time remaining: ' + str(self.converter(self.time_remaining('D'))) + '\n' +
+                              'Work: ' + str(self.converter(self.sum('W'))) + ' | ' +
+                              'POA: ' + str(self.converter(self.sum('P'))) + ' | ' +
+                              'Rest: ' + str(self.converter(self.sum('R'))) + '\n'
+                              'Exceeded daily driving time this week: ' + str(count['exceeded_daily_driving']) + '\n'
+                              'Reduced daily rests this week: ' + str(count['reduced_daily_rest'])+ '\n' + '\n' +
+                              'Fortnight driving remain: ' + fortnight_driving_time_info + '\n' +
+                              'Time left before weekly rest: ' + weekly_total_time_info
+
+
+                              )
+
+        bottom_infringements_status.set(self.lineup_infringements(infringements_list))
 
 
 class Entry:
