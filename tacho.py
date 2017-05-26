@@ -2,7 +2,9 @@ from tkinter import *
 import re
 import datetime
 import Pmw
+import pickle
 # import time
+from tkinter import messagebox
 
 # sec_now = time.time()
 # now = time.localtime(sec_now)
@@ -49,18 +51,22 @@ def num_press(num):  # num pad button action
         top_frame_input.insert(END, num)
         top_frame_input.focus()
 
+
+def save_records():
+    current_data.save()
+
+
 # =======tkinter window===========
 win = Tk()
 # win.geometry("775x325") # Force window size
-win.wm_title("Tacho 0.0.4")
+win.wm_title("Tacho - Driver Time Calculator 0.0.8")
 win.resizable(width=FALSE, height=FALSE)
 
 Pmw.initialise(win)
 
 
 topFrame = Frame(win)
-# topFrame.pack(fill=BOTH)
-topFrame.grid(row=0, column=0, columnspan=2)
+topFrame.grid(row=0, column=0, columnspan=3)
 
 '''
 topLeftFrame = Frame(win)
@@ -69,18 +75,36 @@ topLeftFrame.grid(row=0, column=0)
 topRightFrame = Frame(win)
 topRightFrame.grid(row=0, column=1)
 '''
+
 leftFrame = Frame(win)
-leftFrame.grid(row=1, column=0)
+leftFrame.grid(row=1, column=0, sticky='nsew')
 
 middleFrame = Frame(win)
-middleFrame.grid(row=1, column=1)
+middleFrame.grid(row=1, column=1, sticky='nsew')
 
 rightFrame = Frame(win)
-rightFrame.grid(row=1, column=2)
+rightFrame.grid(row=1, column=2, sticky='nsew')
 
 bottomFrame = Frame(win)
-bottomFrame.grid(row=2, columnspan=3)
+bottomFrame.grid(row=2, column=0, columnspan=3, sticky='nsew')
 
+# Create the Balloon for this toplevel.
+menu_balloon = Pmw.Balloon(win)
+
+# Create and install the MenuBar.
+menuBar = Pmw.MenuBar(win, hull_borderwidth=1, balloon=menu_balloon)
+# menuBar.pack(fill = 'x', anchor=W)
+menuBar.grid(row=0, columnspan=3, sticky='nsew')
+
+
+# Add some buttons to the MainMenuBar.
+menuBar.addmenu('File', 'Save or Undo Changes', side='left')
+menuBar.addmenuitem('File', 'command', 'Save changes', command=save_records, label='Save changes')
+menuBar.addmenuitem('File', 'separator')
+menuBar.addmenuitem('File', 'command', 'Start again without any changes', command=start, label='Undo changes')
+
+menuBar.addmenu('Help', 'Help')
+menuBar.addmenuitem('Help', 'command', 'Info', label='Info')
 # -------keys actions-----
 win.bind("<Return>", lambda a: add_entry())
 win.bind("<KP_Enter>", lambda a: add_entry())
@@ -137,18 +161,9 @@ balloon.bind(set_time_button, 'Update daily rest')
 # ===========Listbox with scrollbar=================
 
 entries_list = Pmw.ScrolledListBox(leftFrame, hscrollmode='none', vscrollmode='static',
-                                   usehullsize=1, hull_height=250, hull_width=350)
-                                   #listbox_height=15, listbox_width=40)
-'''
-entries_list = Pmw.ComboBox(leftFrame, dropdown = 0, scrolledlist_vscrollmode = 'static',
-                            scrolledlist_hscrollmode = 'none', scrolledlist_listbox_height = 15,
-                            scrolledlist_listbox_width=40,
-                            entryfield_validate = {'validator' : 'time'},
-                            entryfield_value = '00:00:00',
-                            )
-'''
+                                   usehullsize=1, hull_height=270, hull_width=350)
 
-entries_list.grid(row=0, column=0, columnspan=4)
+entries_list.grid(row=0, column=0, columnspan=4, sticky=NW)
 
 
 # =======buttons===========
@@ -187,27 +202,27 @@ for name, balloon_info, symbol, background in (('D', 'Driving', u'\u2609', 'gree
 select_mode.invoke(3)  # select break/rest as default
 
 # ------listbox buttons-------
-listbox_buttons = Pmw.ButtonBox(leftFrame,  # Button_height=1,  # Button_width=2,
-                                # pady=1, padx=1,
-                                Button_font="Helvetica 12")
+listbox_buttons = Pmw.ButtonBox(leftFrame,  Button_height=1,  # Button_width=2,
+                                pady=1, padx=1,
+                                Button_font="Helvetica 10")
 
-listbox_buttons.grid(row=2, column=0, columnspan=2, stick=W)
+listbox_buttons.grid(row=1, column=0, columnspan=3, stick=W)
 
 # Add some buttons to the horizontal RadioSelect.
 listbox_buttons.add('Delete Entry', command=lambda: current_data.delete_item())
 # listbox_buttons.add('Edit')
-# listbox_buttons.add('Save')
-listbox_buttons.add('Clear All', command=start)
+listbox_buttons.add('Save List', command=save_records)
+listbox_buttons.add('Undo Changes', command=start)
 
 
-# =====bottom status=============
+# =====right status=============
 right_status_info = StringVar()
 right_status_total = Label(rightFrame, textvariable=right_status_info, bd=1, relief=SUNKEN,
                            font="Helvetica 15 bold", width=42, height=11)
 right_status_info.set("")
 right_status_total.pack(fill=X, expand=True, side=TOP, ipady=10, ipadx=10)
 
-# ====infringements status on right=================
+# ====infringements status =================
 bottom_infringements_status = StringVar()
 
 infringements_status = Label(bottomFrame, textvariable=bottom_infringements_status, bd=1, relief=SUNKEN,
@@ -220,13 +235,17 @@ class Data:
 
     def __init__(self):
         self.records = []
-
-        self.reduced_break = False
+        with open("records.txt", "rb") as fp:   # Unpickling
+            self.records = pickle.load(fp)
 
         if not self.records:
 
             self.records = []
             self.records.insert(0, Entry('R', '678:00:00'))
+
+    def save(self):
+        with open("records.txt", "wb") as fp:   # Pickling help save class object not as string
+            pickle.dump(self.records, fp)
 
     @staticmethod  # this let this method be called in class or outside
     def converter(sec):
@@ -323,7 +342,6 @@ class Data:
         total_remaining = 54000  # 15h = 54000 seconds
         driving_remaining = 36000  # 10h
 
-        # This doesn't work very well yet!!!
         if count['exceeded_daily_driving'] >= 2:
             driving_remaining = 32400  # 9h
 
@@ -354,17 +372,16 @@ class Data:
 
                     elif 39600 <= x.get_value() < 86400:
                         break_info = 'Full daily break taken'
-                    elif 86400 <= x.get_value() < 162000 :  # between 24h and 45h
+                    elif 86400 <= x.get_value() < 162000:  # between 24h and 45h
                         break_info = 'Reduced weekly rest'
                     else:
                         break_info = 'Full weekly rest taken'
 
                     time = 0
 
-
-
                 else:
                     time += x.get_value()
+
             return break_info
 
     def infringements(self):
@@ -385,6 +402,10 @@ class Data:
         first_break = False
         second_break = False
         infringements_list = []
+
+        last_value_exceeded_driving = 0
+        last_value_reduced_rest = 0
+
         for x in self.records:
             daily_total_time -= x.get_value()
             weekly_total_time -= x.get_value()
@@ -393,8 +414,10 @@ class Data:
             if x.get_mode() == 'D':
                 driving_time += x.get_value()
                 daily_driving_time -= x.get_value()
+                '''
                 if daily_driving_time < 3600:  # less than 1h so more than 9h driving
                     count['exceeded_daily_driving'] += 1
+                '''
                 weekly_driving_time -= x.get_value()
                 fortnight_driving_time -= x.get_value()
 
@@ -414,17 +437,7 @@ class Data:
 
             # break 45 minutes or more (also can be split to 15min and 30min)
             if (x.get_mode() == 'R' and x.get_value() >= 2700) or (second_break is True):
-                '''
-                if driving_time > 16200:
 
-                    info = "Break after 4,5h driving needed"
-                    infringements_list.append(info)
-                driving_time = 0
-
-                if working_time > 21600:
-                    info_break = "Break after 6h work needed"
-                    infringements_list.append(info_break)
-                '''
                 driving_time = 0
                 working_time = 0
                 first_break = False
@@ -432,6 +445,8 @@ class Data:
 
                 if x.get_value() >= 32400:  # >=9h
                     daily_total_time += x.get_value()  # do not count last break for daily_total_time
+                    if daily_driving_time < 3600:  # less than 1h so more than 9h driving
+                        count['exceeded_daily_driving'] += 1
 
                     # reduced daily break - more than 13h of work or rest between 9h and 11h
                     if (daily_total_time < 7200 and x.get_value() < 86400) or 32400 <= x.get_value() < 39600:
@@ -439,10 +454,10 @@ class Data:
                         count['reduced_daily_rest'] += 1
 
                     # full daily break between 11h and 24h
-                    elif 39600 <= x.get_value() < 86400:
+                    if 39600 <= x.get_value() < 86400:
                         pass
                     # weekly break between 24h and 45h
-                    elif x.get_value() >= 86400 :  # more than 24h
+                    if x.get_value() >= 86400:  # more than 24h
 
                         if reduced_weekly_rest is True:
 
@@ -505,30 +520,20 @@ class Data:
                 fortnight_driving_time = 324000
 
             # if more than two times between two weekly rests driving time is more than 9h
+            # This doesn't work very well yet
             if count['exceeded_daily_driving'] > 2:
-                infringements_list.append('Exceeded daily driving time already used')
-                count['exceeded_daily_driving'] = 0
+                if last_value_exceeded_driving != count['exceeded_daily_driving']:
+                    infringements_list.append('Too many exceeded daily driving time this week')
+                last_value_exceeded_driving = count['exceeded_daily_driving']
+                # count['exceeded_daily_driving'] = 0
 
             if count['reduced_daily_rest'] > 3:
-                infringements_list.append('Too many reduced daily breaks between 2 weekly rest periods')
-                count['reduced_daily_rest'] = 0
+                # First check if infringement was already added to the list - check if value was changed
+                if last_value_reduced_rest != count['reduced_daily_rest']:
+                    infringements_list.append('Too many reduced daily breaks between two weekly rest periods')
+                # count['reduced_daily_rest'] = 0
+                last_value_reduced_rest = count['reduced_daily_rest']
 
-
-
-        '''
-        if self.time_remaining('total') < 0:
-            infringements_list.append('TOTAL TIME OUT')
-        if self.time_remaining('D') < 0:
-            infringements_list.append('DRIVING TIME OUT')
-
-        try:  # When first break is update firstly has to be deleted and then index error occurs
-
-            if self.records[0].get_value() < 32400:
-                infringements_list.append('Not enough daily break')
-
-        except IndexError:
-            pass
-        '''
         fortnight_driving_time_info = str(self.converter(fortnight_driving_time))
         weekly_total_time_info = str(self.converter(weekly_total_time))
         # return infringements_list
@@ -586,7 +591,7 @@ class Data:
                               'POA: ' + str(self.converter(self.sum('P'))) + ' | ' +
                               'Rest: ' + str(self.converter(self.sum('R'))) + '\n'
                               'Exceeded daily driving time this week: ' + str(count['exceeded_daily_driving']) + '\n'
-                              'Reduced daily rests this week: ' + str(count['reduced_daily_rest'])+ '\n' + '\n' +
+                              'Reduced daily rests this week: ' + str(count['reduced_daily_rest']) + '\n' + '\n' +
                               'Fortnight driving remain: ' + fortnight_driving_time_info + '\n' +
                               'Time left before weekly rest: ' + weekly_total_time_info
 
@@ -633,4 +638,10 @@ class Entry:
         return conversion + ' ' + mode_names[self.mode]
 
 start()
+
+
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit? Unsaved changes will be lost!"):
+        win.destroy()
+win.protocol("WM_DELETE_WINDOW", on_closing)
 win.mainloop()
